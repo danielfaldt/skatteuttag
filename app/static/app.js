@@ -461,6 +461,102 @@ function readSavedState() {
   }
 }
 
+function normalizeNumericToken(token, kind = "amount") {
+  if (kind === "percent") {
+    const lastComma = token.lastIndexOf(",");
+    const lastDot = token.lastIndexOf(".");
+    const decimalSeparator = lastComma > lastDot ? "," : ".";
+    return decimalSeparator === ","
+      ? token.replace(/\./g, "").replace(",", ".")
+      : token.replace(/,/g, "");
+  }
+
+  return token.replace(/[,.]/g, "");
+}
+
+function evaluateArithmeticExpression(raw, kind = "amount") {
+  const compact = String(raw || "").replace(/\s+/g, "");
+  if (!/[+\-*/()]/.test(compact) || !/^[0-9+\-*/().,]+$/.test(compact)) {
+    return null;
+  }
+
+  const tokens = compact.match(/[0-9][0-9.,]*|[()+\-*/]/g);
+  if (!tokens || tokens.join("") !== compact) {
+    return null;
+  }
+
+  let index = 0;
+
+  function parseExpression() {
+    let value = parseTerm();
+    while (tokens[index] === "+" || tokens[index] === "-") {
+      const operator = tokens[index++];
+      const rhs = parseTerm();
+      value = operator === "+" ? value + rhs : value - rhs;
+    }
+    return value;
+  }
+
+  function parseTerm() {
+    let value = parseFactor();
+    while (tokens[index] === "*" || tokens[index] === "/") {
+      const operator = tokens[index++];
+      const rhs = parseFactor();
+      if (operator === "/" && rhs === 0) {
+        throw new Error("Division by zero");
+      }
+      value = operator === "*" ? value * rhs : value / rhs;
+    }
+    return value;
+  }
+
+  function parseFactor() {
+    const token = tokens[index];
+
+    if (token === "+") {
+      index += 1;
+      return parseFactor();
+    }
+
+    if (token === "-") {
+      index += 1;
+      return -parseFactor();
+    }
+
+    if (token === "(") {
+      index += 1;
+      const value = parseExpression();
+      if (tokens[index] !== ")") {
+        throw new Error("Missing closing parenthesis");
+      }
+      index += 1;
+      return value;
+    }
+
+    if (!token || !/^[0-9]/.test(token)) {
+      throw new Error("Invalid token");
+    }
+
+    index += 1;
+    const normalized = normalizeNumericToken(token, kind);
+    const parsed = Number(normalized);
+    if (!Number.isFinite(parsed)) {
+      throw new Error("Invalid number");
+    }
+    return parsed;
+  }
+
+  try {
+    const value = parseExpression();
+    if (index !== tokens.length || !Number.isFinite(value)) {
+      return null;
+    }
+    return value;
+  } catch {
+    return null;
+  }
+}
+
 function parseLocaleNumber(value, kind = "amount") {
   if (typeof value === "number") {
     return value;
@@ -468,6 +564,11 @@ function parseLocaleNumber(value, kind = "amount") {
   const raw = String(value || "").trim().replace(/\s/g, "");
   if (!raw) {
     return 0;
+  }
+
+  const expressionValue = evaluateArithmeticExpression(raw, kind);
+  if (expressionValue !== null) {
+    return expressionValue;
   }
 
   if (kind === "amount") {
@@ -511,6 +612,14 @@ function refreshFormattedInputs() {
     input.value = formatInputValue(input.value, input.dataset.numberKind);
   });
   syncOwnershipDisplay();
+}
+
+function formatNumericField(input) {
+  const kind = input.dataset.numberKind;
+  if (!kind) {
+    return;
+  }
+  input.value = formatInputValue(input.value, kind);
 }
 
 function formToObject() {
@@ -775,6 +884,24 @@ function saveState() {
 function saveStateIfFormField(event) {
   if (event.target && event.target.name && form.contains(event.target)) {
     saveState();
+  }
+}
+
+function positionInfoPopover(popover) {
+  const panel = popover.querySelector(".info-panel");
+  if (!panel) {
+    return;
+  }
+
+  popover.classList.remove("align-left", "open-upward");
+  const rect = panel.getBoundingClientRect();
+
+  if (rect.left < 16) {
+    popover.classList.add("align-left");
+  }
+
+  if (rect.bottom > window.innerHeight - 16) {
+    popover.classList.add("open-upward");
   }
 }
 
@@ -1109,7 +1236,33 @@ form.addEventListener("input", (event) => {
 
 numericInputs.forEach((input) => {
   input.addEventListener("blur", () => {
-    input.value = formatInputValue(input.value, input.dataset.numberKind);
+    formatNumericField(input);
+    saveState();
+  });
+  input.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter") {
+      return;
+    }
+    event.preventDefault();
+    formatNumericField(input);
+    saveState();
+  });
+});
+
+infoPopovers.forEach((popover) => {
+  popover.addEventListener("toggle", () => {
+    if (!popover.open) {
+      popover.classList.remove("align-left", "open-upward");
+      return;
+    }
+
+    infoPopovers.forEach((otherPopover) => {
+      if (otherPopover !== popover) {
+        otherPopover.open = false;
+      }
+    });
+
+    requestAnimationFrame(() => positionInfoPopover(popover));
   });
 });
 
@@ -1172,6 +1325,14 @@ document.addEventListener("click", (event) => {
   infoPopovers.forEach((popover) => {
     if (popover.open && !popover.contains(event.target)) {
       popover.open = false;
+    }
+  });
+});
+
+window.addEventListener("resize", () => {
+  infoPopovers.forEach((popover) => {
+    if (popover.open) {
+      positionInfoPopover(popover);
     }
   });
 });

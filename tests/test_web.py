@@ -102,3 +102,14 @@ def test_client_script_persists_form_state_on_input():
     assert 'document.addEventListener("click"' in body
     assert "/api/export-pdf" in body
     assert "button.export_pdf" in body
+    assert "evaluateArithmeticExpression" in body
+    assert "positionInfoPopover" in body
+    assert 'event.key !== "Enter"' in body
+
+
+def test_styles_include_popover_positioning_rules():
+    response = client.get("/static/styles.css")
+    assert response.status_code == 200
+    body = response.text
+    assert ".info-popover.align-left .info-panel" in body
+    assert ".info-popover.open-upward .info-panel" in body
