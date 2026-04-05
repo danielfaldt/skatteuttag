@@ -10,6 +10,7 @@ def test_index_renders():
     response = client.get("/")
     assert response.status_code == 200
     assert "Skatteuttag" in response.text
+    assert 'id="language-switch"' in response.text
 
 
 def test_api_calculate_returns_json():

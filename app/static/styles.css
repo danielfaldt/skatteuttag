@@ -93,6 +93,20 @@ body {
   font-weight: 600;
 }
 
+.language-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.language-switch select {
+  border: 0;
+  background: transparent;
+  color: var(--accent);
+  padding: 0;
+  min-width: auto;
+}
+
 .panel,
 .results > .card {
   padding: 24px;

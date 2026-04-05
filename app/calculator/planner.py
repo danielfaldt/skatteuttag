@@ -46,7 +46,7 @@ class DividendSpaceResult:
     spouse_space: float
     user_rule_label: str
     spouse_rule_label: str
-    notes: list[str]
+    notes: list[dict[str, Any]]
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -54,9 +54,15 @@ class DividendSpaceResult:
 
 def compute_dividend_spaces(data: PlanningInput) -> DividendSpaceResult:
     rule = DIVIDEND_RULES[data.year]
-    notes = [
-        f"Planning year {data.year} uses salary data from {rule.salary_basis_year} for the wage-linked dividend room.",
-        "The model assumes the company is jointly owned 50/50 by spouses and that only the user receives salary from the company.",
+    notes: list[dict[str, Any]] = [
+        {
+            "key": "note.salary_basis_year",
+            "params": {"planningYear": data.year, "salaryBasisYear": rule.salary_basis_year},
+        },
+        {
+            "key": "note.ownership_structure",
+            "params": {},
+        },
     ]
 
     if data.year == 2025:
@@ -73,11 +79,17 @@ def compute_dividend_spaces(data: PlanningInput) -> DividendSpaceResult:
         if data.prior_year_user_company_salary >= salary_requirement:
             main_wage_space = 0.5 * data.prior_year_company_cash_salaries * OWNER_SHARE
             notes.append(
-                f"The old salary-threshold test is met because prior-year company salary is at least {salary_requirement:,.0f} SEK."
+                {
+                    "key": "note.old_rule_salary_requirement_met",
+                    "params": {"salaryRequirement": round(salary_requirement, 0)},
+                }
             )
         else:
             notes.append(
-                f"The old salary-threshold test is not met. Prior-year company salary needs about {salary_requirement:,.0f} SEK to unlock wage-based space in 2025."
+                {
+                    "key": "note.old_rule_salary_requirement_not_met",
+                    "params": {"salaryRequirement": round(salary_requirement, 0)},
+                }
             )
 
         main_user = (
@@ -105,7 +117,7 @@ def compute_dividend_spaces(data: PlanningInput) -> DividendSpaceResult:
             spouse_space = simplified_spouse
             spouse_rule_label = "Simplification rule"
 
-        notes.append("Saved dividend room is uplifted by 4.96% for 2025 under the pre-2026 rules.")
+        notes.append({"key": "note.old_rule_saved_space_uplift", "params": {}})
         return DividendSpaceResult(
             user_space=round(user_space, 2),
             spouse_space=round(spouse_space, 2),
@@ -123,16 +135,20 @@ def compute_dividend_spaces(data: PlanningInput) -> DividendSpaceResult:
     user_interest = max(data.user_share_cost_basis - 100_000, 0.0) * (rule.new_interest_rate or 0.0)
     spouse_interest = max(data.spouse_share_cost_basis - 100_000, 0.0) * (rule.new_interest_rate or 0.0)
 
-    notes.append(
-        "The 2026 rule set uses one combined method: ground amount, wage-based room, interest on cost basis above 100,000 SEK, and saved room."
-    )
+    notes.append({"key": "note.new_rule_combined_method", "params": {}})
     if wage_space_per_owner > 0:
         notes.append(
-            f"The wage-based room is positive because prior-year company cash salaries exceed the 2026 deduction amount of {(rule.new_wage_deduction_total or 0.0):,.0f} SEK."
+            {
+                "key": "note.new_rule_wage_space_positive",
+                "params": {"wageDeduction": round((rule.new_wage_deduction_total or 0.0), 0)},
+            }
         )
     else:
         notes.append(
-            f"The wage-based room is zero because prior-year company cash salaries do not exceed {(rule.new_wage_deduction_total or 0.0):,.0f} SEK."
+            {
+                "key": "note.new_rule_wage_space_zero",
+                "params": {"wageDeduction": round((rule.new_wage_deduction_total or 0.0), 0)},
+            }
         )
 
     return DividendSpaceResult(
@@ -406,16 +422,16 @@ def plan_compensation(payload: dict[str, Any]) -> dict[str, Any]:
         "recommended": recommended,
         "alternatives": alternatives,
         "assumptions": [
-            "The model assumes a Swedish private limited company with two spouse owners holding 50% each.",
-            "Only the user receives salary from the company.",
-            "Only current-year profit after salary cost and any opening retained earnings entered by the user are available for dividends.",
-            "The municipality tax rate is user-editable and defaults to the national average for the selected year.",
-            "The app models year-specific salary tax and 3:12-style dividend tax using official 2025 and 2026 rule data.",
-            "Service-taxed excess dividend is modeled as additional service income with the spouse's external salary affecting only the spouse's personal tax outcome.",
+            {"key": "assumption.swedish_limited_company", "params": {}},
+            {"key": "assumption.only_user_company_salary", "params": {}},
+            {"key": "assumption.dividend_limited_to_profit_and_retained", "params": {}},
+            {"key": "assumption.municipal_rate_editable", "params": {"year": data.year}},
+            {"key": "assumption.official_rule_data", "params": {}},
+            {"key": "assumption.spouse_salary_affects_service_tax", "params": {}},
         ],
         "explanations": [
-            f"Salary paid during {data.year} is taxed using {data.year} salary-tax rules.",
-            f"Dividend room for {data.year} uses the salary base year {salary_basis_year}.",
-            "The recommendation minimizes distance to the user's after-tax target and then prefers lower total tax burden.",
+            {"key": "explanation.salary_uses_planning_year", "params": {"planningYear": data.year}},
+            {"key": "explanation.dividend_uses_salary_basis_year", "params": {"planningYear": data.year, "salaryBasisYear": salary_basis_year}},
+            {"key": "explanation.recommendation_scoring", "params": {}},
         ],
     }

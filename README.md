@@ -7,6 +7,7 @@ The app takes one planning year as the controlling input and derives the relevan
 ## Features
 
 - One-year planning input with explicit salary-base-year mapping
+- Built-in bilingual UI with Swedish and English
 - Salary and dividend recommendation aimed at the user's target annual net income
 - Side-by-side alternative scenarios
 - Transparent breakdown of company tax, salary tax, dividend tax, and qualified dividend room

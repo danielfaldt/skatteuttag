@@ -38,6 +38,7 @@ docker compose --env-file .env.dev run --rm test
 - `app/calculator/planner.py`: dividend room, scenario evaluation, recommendation selection
 - `app/templates/index.html`: page shell
 - `app/static/app.js`: client behavior and local storage
+- `app/static/app.js`: client behavior, local storage, and Swedish/English i18n
 - `app/static/styles.css`: UI styling
 
 ## Conventions
