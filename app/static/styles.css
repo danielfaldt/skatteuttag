@@ -146,6 +146,10 @@ body {
 .field span {
   font-size: 0.92rem;
   font-weight: 600;
+  line-height: 1.15;
+  min-height: 2.15em;
+  display: flex;
+  align-items: flex-end;
 }
 
 input,
