@@ -128,7 +128,7 @@ const TRANSLATIONS = {
     "recommended.final_summary_suggested": "Ta ut {salary} i lön, {dividend} i total utdelning och överväg aktiefördelningen {userName} {userShare} % / {spouseName} {spouseShare} %.",
     "recommended.final_status_pending": "Ägarfördelningen verifieras fortfarande i bakgrunden.",
     "recommended.final_status_same": "Det här är modellens bästa helhetsförslag givet nuvarande indata.",
-    "recommended.final_status_better": "Modellen hittar lägre total skatt med den föreslagna aktiefördelningen än med nuvarande fördelning.",
+    "recommended.final_status_better": "Modellen hittar ett bättre hushållsutfall med den föreslagna aktiefördelningen än med nuvarande fördelning.",
     "breakdown.title": "Nedbrytning",
     "breakdown.subtitle": "Bolagets kassaflöde, löneskatt, utdelningsskatt och utdelningsutrymme.",
     "alternatives.title": "Alternativa scenarier",
@@ -203,11 +203,16 @@ const TRANSLATIONS = {
     "ownership.input_label": "Indata",
     "ownership.proposal_label": "Förslag",
     "ownership.current_split": "Nuvarande fördelning: {userName} {userSharePercentage} % och {spouseName} {spouseSharePercentage} %.",
-    "ownership.better_split": "Modellen hittar lägre total skatt om {userName} äger {userSharePercentage} % och {spouseName} {spouseSharePercentage} %.",
-    "ownership.tax_saving": "Beräknad minskning av total skatt: {taxSaving}.",
+    "ownership.better_split": "Modellen hittar ett bättre hushållsutfall om {userName} äger {userSharePercentage} % och {spouseName} {spouseSharePercentage} %.",
+    "ownership.optimized_for_household": "Förslaget är optimerat för hushållets maxläge, inte för närmast användarens personliga målnetto.",
+    "ownership.tax_saving": "Beräknad förändring i total skatt: {taxSaving}.",
+    "ownership.tax_saving_positive": "Total skatt minskar med {taxSaving}.",
+    "ownership.tax_saving_negative": "Total skatt ökar med {taxSaving}.",
+    "ownership.tax_saving_neutral": "Total skatt är i stort sett oförändrad.",
+    "ownership.household_net_gain": "Beräknad ökning av hushållets netto från bolaget: {householdNetGain}.",
     "ownership.no_better_split": "Ingen bättre ägarfördelning hittades inom modellens sökyta.",
-    "ownership.no_better_split_detail": "Nuvarande fördelning ser redan skatteeffektiv ut givet inmatningen och de antaganden som används här.",
-    "ownership.loading": "Huvudrekommendationen och löne- mot utdelningsanalysen visas redan. Nu testar appen alternativa ägarfördelningar för att se om total skatt kan sänkas ytterligare.",
+    "ownership.no_better_split_detail": "Nuvarande fördelning ser redan stark ut utifrån hushållets netto och total skatt givet inmatningen och de antaganden som används här.",
+    "ownership.loading": "Huvudrekommendationen och löne- mot utdelningsanalysen visas redan. Nu testar appen alternativa ägarfördelningar för att se om hushållets netto från bolaget kan förbättras ytterligare.",
     "ownership.loading_title": "Ägarfördelning jämförs i bakgrunden",
     "ownership.loading_detail": "Det här steget påverkar bara förslaget om ägarandelar, inte huvudrekommendationen som redan visas.",
     "mix.title": "Löne- och utdelningsanalys",
@@ -342,7 +347,7 @@ const TRANSLATIONS = {
     "recommended.final_summary_suggested": "Take {salary} as salary, {dividend} as total dividend, and consider the ownership split {userName} {userShare}% / {spouseName} {spouseShare}%.",
     "recommended.final_status_pending": "The ownership split is still being verified in the background.",
     "recommended.final_status_same": "This is the model's best overall proposal based on the current inputs.",
-    "recommended.final_status_better": "The model finds lower total tax with the suggested ownership split than with the current split.",
+    "recommended.final_status_better": "The model finds a better household outcome with the suggested ownership split than with the current split.",
     "breakdown.title": "Breakdown",
     "breakdown.subtitle": "Company cash flow, salary tax, dividend tax, and dividend room.",
     "alternatives.title": "Alternative scenarios",
@@ -417,11 +422,16 @@ const TRANSLATIONS = {
     "ownership.input_label": "Input",
     "ownership.proposal_label": "Proposal",
     "ownership.current_split": "Current split: {userName} {userSharePercentage}% and {spouseName} {spouseSharePercentage}%.",
-    "ownership.better_split": "The model finds lower total tax if {userName} owns {userSharePercentage}% and {spouseName} owns {spouseSharePercentage}%.",
-    "ownership.tax_saving": "Estimated total-tax reduction: {taxSaving}.",
+    "ownership.better_split": "The model finds a better household outcome if {userName} owns {userSharePercentage}% and {spouseName} owns {spouseSharePercentage}%.",
+    "ownership.optimized_for_household": "This proposal is optimized for the household maximum, not for the closest match to the user's personal net-income target.",
+    "ownership.tax_saving": "Estimated change in total tax: {taxSaving}.",
+    "ownership.tax_saving_positive": "Total tax decreases by {taxSaving}.",
+    "ownership.tax_saving_negative": "Total tax increases by {taxSaving}.",
+    "ownership.tax_saving_neutral": "Total tax is broadly unchanged.",
+    "ownership.household_net_gain": "Estimated increase in household net from the company: {householdNetGain}.",
     "ownership.no_better_split": "No better ownership split was found within the model search space.",
-    "ownership.no_better_split_detail": "The current split already looks tax-efficient given the inputs and assumptions used here.",
-    "ownership.loading": "The main recommendation and the salary-versus-dividend analysis are already shown. The app is now testing alternative ownership splits to see whether total tax can be reduced further.",
+    "ownership.no_better_split_detail": "The current split already looks strong on household net and total tax given the inputs and assumptions used here.",
+    "ownership.loading": "The main recommendation and the salary-versus-dividend analysis are already shown. The app is now testing alternative ownership splits to see whether household net from the company can be improved further.",
     "ownership.loading_title": "Ownership split is being compared in the background",
     "ownership.loading_detail": "This step only affects the ownership suggestion, not the main recommendation that is already visible.",
     "mix.title": "Salary vs dividend analysis",
@@ -1190,6 +1200,17 @@ function renderOwnershipSuggestion(result) {
     return;
   }
 
+  let taxImpactText = t("ownership.tax_saving_neutral");
+  if (suggestion.estimated_tax_saving > 1) {
+    taxImpactText = t("ownership.tax_saving_positive", {
+      taxSaving: formatCurrency(suggestion.estimated_tax_saving),
+    });
+  } else if (suggestion.estimated_tax_saving < -1) {
+    taxImpactText = t("ownership.tax_saving_negative", {
+      taxSaving: formatCurrency(Math.abs(suggestion.estimated_tax_saving)),
+    });
+  }
+
   ownershipSuggestionBox.innerHTML = `
     <div class="note">
       <strong>${t("ownership.title")}</strong><br>
@@ -1208,9 +1229,11 @@ function renderOwnershipSuggestion(result) {
           })}</span>
         </div>
       </div>
-      ${t("ownership.tax_saving", {
-        taxSaving: formatCurrency(suggestion.estimated_tax_saving),
+      <div>${t("ownership.optimized_for_household")}</div>
+      ${t("ownership.household_net_gain", {
+        householdNetGain: formatCurrency(suggestion.estimated_household_net_gain),
       })}<br>
+      ${taxImpactText}<br>
       ${translateMessage(suggestion.note)}
     </div>
   `;

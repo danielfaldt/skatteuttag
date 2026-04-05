@@ -103,6 +103,8 @@ def test_client_script_persists_form_state_on_input():
     assert "ownership-loading" in body
     assert "ownership.input_label" in body
     assert "ownership.proposal_label" in body
+    assert "ownership.optimized_for_household" in body
+    assert "ownership.household_net_gain" in body
     assert "renderCompensationMixAnalysis" in body
     assert "mix.title" in body
     assert "mix.summary_mixed" in body

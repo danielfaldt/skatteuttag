@@ -763,6 +763,7 @@ def suggest_ownership_split(data: PlanningInput) -> dict[str, Any] | None:
     coarse_best_percentage, _ = min(
         candidates,
         key=lambda item: (
+            -item[1]["household_net_from_company"],
             item[1]["total_tax_burden"],
             item[1]["distance_to_target"],
         ),
@@ -781,16 +782,20 @@ def suggest_ownership_split(data: PlanningInput) -> dict[str, Any] | None:
     best_percentage, best_result = min(
         candidates,
         key=lambda item: (
+            -item[1]["household_net_from_company"],
             item[1]["total_tax_burden"],
             item[1]["distance_to_target"],
         ),
     )
 
     tax_saving = round(current_result["total_tax_burden"] - best_result["total_tax_burden"], 2)
+    household_net_gain = round(best_result["household_net_from_company"] - current_result["household_net_from_company"], 2)
     if (
         best_percentage == round(data.user_share_percentage, 1)
-        or tax_saving <= 0
-        or best_result["distance_to_target"] > current_result["distance_to_target"]
+        or (
+            household_net_gain <= 0
+            and tax_saving <= 0
+        )
     ):
         return None
 
@@ -800,8 +805,11 @@ def suggest_ownership_split(data: PlanningInput) -> dict[str, Any] | None:
         "suggested_user_share_percentage": round(best_percentage, 1),
         "suggested_spouse_share_percentage": round(100 - best_percentage, 1),
         "estimated_tax_saving": tax_saving,
+        "estimated_household_net_gain": household_net_gain,
         "current_total_tax_burden": current_result["total_tax_burden"],
         "suggested_total_tax_burden": best_result["total_tax_burden"],
+        "current_household_net": current_result["household_net_from_company"],
+        "suggested_household_net": best_result["household_net_from_company"],
         "note": {"key": "note.ownership_suggestion_scope", "params": {}},
     }
 

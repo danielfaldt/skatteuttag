@@ -77,6 +77,7 @@ def test_build_ownership_analysis_can_suggest_better_ownership_split():
     )
     suggestion = result["ownership_suggestion"]
     assert suggestion is not None
+    assert suggestion["estimated_household_net_gain"] >= 0
     assert suggestion["estimated_tax_saving"] > 0
     assert suggestion["suggested_user_share_percentage"] != 50
 
