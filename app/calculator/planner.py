@@ -447,15 +447,32 @@ def evaluate_plan(data: PlanningInput, planned_salary: float, total_dividend: fl
     }
 
 
+def recommendation_sort_key(item: dict[str, Any]) -> tuple[float, float, float, float, float]:
+    return (
+        0 if item["shortfall_to_target"] == 0 else 1,
+        item["shortfall_to_target"],
+        item["overshoot_to_target"],
+        item["total_tax_burden"],
+        item["salary"],
+    )
+
+
+def salary_search_steps(max_salary: float) -> tuple[float, float, float]:
+    coarse = 5_000.0 if max_salary > 300_000 else 2_500.0
+    medium = 500.0
+    fine = 100.0
+    return coarse, medium, fine
+
+
 def choose_dividend_for_salary(data: PlanningInput, salary: float) -> dict[str, Any] | None:
     company = compute_company_budget(data, salary)
     if not company["valid"] or company["profit_before_periodization"] < 0:
         return None
 
     max_dividend = company["available_dividend_cash"]
+    spaces = compute_dividend_spaces(data)
     low = 0.0
     high = max_dividend
-    best = evaluate_plan(data, salary, 0.0)
 
     for _ in range(32):
         midpoint = (low + high) / 2
@@ -463,31 +480,60 @@ def choose_dividend_for_salary(data: PlanningInput, salary: float) -> dict[str, 
         if candidate is None:
             high = midpoint
             continue
-        best = candidate
         if candidate["user_net_from_company"] < data.target_user_net_income:
             low = midpoint
         else:
             high = midpoint
 
+    candidate_dividends = {
+        0.0,
+        round(max_dividend / 100.0) * 100.0,
+        round(low / 100.0) * 100.0,
+        round(high / 100.0) * 100.0,
+        round((low + high) / 200.0) * 100.0,
+        round((spaces.user_space + spaces.spouse_space) / 100.0) * 100.0,
+    }
+    if data.user_share_fraction > 0:
+        candidate_dividends.add(round((spaces.user_space / data.user_share_fraction) / 100.0) * 100.0)
+    if data.spouse_share_fraction > 0:
+        candidate_dividends.add(round((spaces.spouse_space / data.spouse_share_fraction) / 100.0) * 100.0)
+
     candidates = [
-        evaluate_plan(data, salary, 0.0),
-        evaluate_plan(data, salary, round(low / 100.0) * 100.0),
-        evaluate_plan(data, salary, round(high / 100.0) * 100.0),
-        evaluate_plan(data, salary, round(max_dividend / 100.0) * 100.0),
+        evaluate_plan(data, salary, min(max(dividend, 0.0), max_dividend))
+        for dividend in candidate_dividends
     ]
     candidates = [candidate for candidate in candidates if candidate is not None]
     if not candidates:
         return None
 
-    return min(
-        candidates,
-        key=lambda item: (
-            0 if item["shortfall_to_target"] == 0 else 1,
-            item["shortfall_to_target"],
-            item["overshoot_to_target"],
-            item["total_tax_burden"],
-        ),
-    )
+    return min(candidates, key=recommendation_sort_key)
+
+
+def refine_salary_candidates(
+    data: PlanningInput,
+    salaries: set[float],
+    *,
+    window: float,
+    step: float,
+    max_salary: float,
+) -> list[dict[str, Any]]:
+    evaluated: list[dict[str, Any]] = []
+    seen_salaries: set[float] = set()
+
+    for center in sorted(salaries):
+        start = max(center - window, 0.0)
+        end = min(center + window, max_salary)
+        current = round(start / step) * step
+        while current <= end + 1e-9:
+            normalized = round(current, 2)
+            if normalized not in seen_salaries:
+                seen_salaries.add(normalized)
+                scenario = choose_dividend_for_salary(data, normalized)
+                if scenario is not None:
+                    evaluated.append(scenario)
+            current += step
+
+    return evaluated
 
 
 def build_alternative_scenarios(data: PlanningInput, evaluated: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -663,29 +709,41 @@ def plan_core(data: PlanningInput) -> dict[str, Any]:
         + (data.user_car_benefit * current_employer_contribution_rate)
     )
     max_salary = max((data.company_result_before_corporate_tax - fixed_costs) / (1 + current_employer_contribution_rate), 0.0)
-    step = 5_000 if max_salary > 300_000 else 2_500
-    evaluated: list[dict[str, Any]] = []
-
-    salary = 0.0
-    while salary <= max_salary + 1:
-        scenario = choose_dividend_for_salary(data, round(salary, 2))
-        if scenario is not None:
-            evaluated.append(scenario)
-        salary += step
+    coarse_step, medium_step, fine_step = salary_search_steps(max_salary)
+    evaluated: list[dict[str, Any]] = refine_salary_candidates(
+        data,
+        {0.0, max_salary},
+        window=max_salary,
+        step=coarse_step,
+        max_salary=max_salary,
+    )
 
     if not evaluated:
         raise ValueError("No feasible scenario could be created from the provided company profit.")
 
-    recommended = min(
-        evaluated,
-        key=lambda item: (
-            0 if item["shortfall_to_target"] == 0 else 1,
-            item["shortfall_to_target"],
-            item["overshoot_to_target"],
-            item["total_tax_burden"],
-            item["salary"],
-        ),
+    medium_centers = {item["salary"] for item in sorted(evaluated, key=recommendation_sort_key)[:8]}
+    evaluated.extend(
+        refine_salary_candidates(
+            data,
+            medium_centers,
+            window=coarse_step,
+            step=medium_step,
+            max_salary=max_salary,
+        )
     )
+
+    fine_centers = {item["salary"] for item in sorted(evaluated, key=recommendation_sort_key)[:8]}
+    evaluated.extend(
+        refine_salary_candidates(
+            data,
+            fine_centers,
+            window=medium_step,
+            step=fine_step,
+            max_salary=max_salary,
+        )
+    )
+
+    recommended = min(evaluated, key=recommendation_sort_key)
     alternatives = build_alternative_scenarios(data, evaluated)
     compensation_mix = build_compensation_mix_analysis(data, recommended, evaluated)
     return {"recommended": recommended, "alternatives": alternatives, "compensation_mix": compensation_mix}
