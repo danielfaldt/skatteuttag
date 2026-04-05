@@ -14,7 +14,13 @@ const metaDescription = document.querySelector("#meta-description");
 const pageTitle = document.querySelector("#page-title");
 const appNameElement = document.querySelector("#app-name");
 const ownershipSuggestionBox = document.querySelector("#ownership-suggestion");
+const userDisplayNameInput = document.querySelector("#user-display-name");
+const spouseDisplayNameInput = document.querySelector("#spouse-display-name");
+const userShareLabel = document.querySelector("#user-share-label");
+const spouseShareLabel = document.querySelector("#spouse-share-label");
+const userShareDisplay = document.querySelector("#user-share-display");
 const spouseShareDisplay = document.querySelector("#spouse-share-display");
+const userShareSlider = document.querySelector("#user-share-slider");
 const numericInputs = Array.from(document.querySelectorAll(".js-number"));
 
 const TRANSLATIONS = {
@@ -45,8 +51,12 @@ const TRANSLATIONS = {
     "field.saved_dividend_space_spouse": "Makes/makas sparade utdelningsutrymme",
     "field.user_share_cost_basis": "Användarens omkostnadsbelopp",
     "field.spouse_share_cost_basis": "Makes/makas omkostnadsbelopp",
+    "field.user_display_name": "Användarens namn",
+    "field.spouse_display_name": "Makes/makas namn",
     "field.user_share_percentage": "Användarens aktieandel",
     "field.spouse_share_percentage": "Makes/makas aktieandel",
+    "placeholder.user_display_name": "Ditt namn",
+    "placeholder.spouse_display_name": "Namn på make/maka",
     "button.calculate": "Beräkna rekommendation",
     "button.reset": "Återställ sparade värden",
     "inputs.helper": "Appen sparar formulärvärden i webbläsarens lokala lagring och återställer dem vid omladdning. Ange bolagets resultat efter ordinarie kostnader. Appen räknar sedan själv på ägarlön, arbetsgivaravgifter och bolagsskatt.",
@@ -106,6 +116,12 @@ const TRANSLATIONS = {
     "scenario.total_dividend": "Total utdelning",
     "scenario.user_net": "Användarens netto",
     "scenario.total_tax_burden": "Total skattebelastning",
+    "owner.user_default": "Användaren",
+    "owner.spouse_default": "Make/maka",
+    "noun.dividend_room": "utrymme",
+    "noun.rule": "regel",
+    "noun.qualified_dividend": "kvalificerade utdelning",
+    "noun.service_taxed_excess": "tjänstebeskattade överskjutande del",
     "ownership.title": "Föreslagen ägarfördelning",
     "ownership.better_split": "Modellen hittar lägre total skatt om användaren äger {userSharePercentage} % och make/maka {spouseSharePercentage} %.",
     "ownership.tax_saving": "Beräknad minskning av total skatt: {taxSaving}.",
@@ -122,7 +138,7 @@ const TRANSLATIONS = {
     "note.new_rule_combined_method": "2026 års regelverk använder en kombinerad metod: grundbelopp, lönebaserat utrymme, ränta på omkostnadsbelopp över 100 000 SEK och sparat utrymme.",
     "note.new_rule_wage_space_positive": "Det lönebaserade utrymmet är positivt eftersom bolagets kontanta löner under basåret överstiger avdraget på {wageDeduction} SEK.",
     "note.new_rule_wage_space_zero": "Det lönebaserade utrymmet är noll eftersom bolagets kontanta löner under basåret inte överstiger avdraget på {wageDeduction} SEK.",
-    "assumption.swedish_limited_company": "Modellen antar ett svenskt privat aktiebolag med två makar där användaren äger {userSharePercentage} % och make/maka {spouseSharePercentage} %.",
+    "assumption.swedish_limited_company": "Den aktuella modellen avser ett svenskt privat aktiebolag med två makar där användaren äger {userSharePercentage} % och make/maka {spouseSharePercentage} %.",
     "assumption.only_user_company_salary": "Endast användaren antas ta lön från bolaget.",
     "assumption.dividend_limited_to_profit_and_retained": "Utdelning begränsas till aktuell vinst efter lönekostnad och eventuell ingående fri vinst som användaren anger.",
     "assumption.municipal_rate_editable": "Kommunalskatten kan ändras av användaren och förifylls med rikssnittet för valt år.",
@@ -159,8 +175,12 @@ const TRANSLATIONS = {
     "field.saved_dividend_space_spouse": "Spouse saved dividend space",
     "field.user_share_cost_basis": "User share cost basis",
     "field.spouse_share_cost_basis": "Spouse share cost basis",
+    "field.user_display_name": "User name",
+    "field.spouse_display_name": "Spouse name",
     "field.user_share_percentage": "User ownership share",
     "field.spouse_share_percentage": "Spouse ownership share",
+    "placeholder.user_display_name": "Your name",
+    "placeholder.spouse_display_name": "Spouse name",
     "button.calculate": "Calculate recommendation",
     "button.reset": "Reset saved values",
     "inputs.helper": "The app stores your form values in local browser storage and restores them on reload. Enter the company result after ordinary business costs. The app then models owner salary, employer contributions, and corporate tax itself.",
@@ -220,6 +240,12 @@ const TRANSLATIONS = {
     "scenario.total_dividend": "Total dividend",
     "scenario.user_net": "User net",
     "scenario.total_tax_burden": "Total tax burden",
+    "owner.user_default": "User",
+    "owner.spouse_default": "Spouse",
+    "noun.dividend_room": "room",
+    "noun.rule": "rule",
+    "noun.qualified_dividend": "qualified dividend",
+    "noun.service_taxed_excess": "service-taxed excess",
     "ownership.title": "Suggested ownership split",
     "ownership.better_split": "The model finds lower total tax if the user owns {userSharePercentage}% and the spouse owns {spouseSharePercentage}%.",
     "ownership.tax_saving": "Estimated total-tax reduction: {taxSaving}.",
@@ -236,7 +262,7 @@ const TRANSLATIONS = {
     "note.new_rule_combined_method": "The 2026 rule set uses one combined method: ground amount, wage-based room, interest on cost basis above 100,000 SEK, and saved room.",
     "note.new_rule_wage_space_positive": "The wage-based room is positive because prior-year company cash salaries exceed the deduction amount of {wageDeduction} SEK.",
     "note.new_rule_wage_space_zero": "The wage-based room is zero because prior-year company cash salaries do not exceed the deduction amount of {wageDeduction} SEK.",
-    "assumption.swedish_limited_company": "The model assumes a Swedish private limited company with two spouse owners where the user owns {userSharePercentage}% and the spouse owns {spouseSharePercentage}%.",
+    "assumption.swedish_limited_company": "The current model covers a Swedish private limited company with two spouse owners where the user owns {userSharePercentage}% and the spouse owns {spouseSharePercentage}%.",
     "assumption.only_user_company_salary": "Only the user receives salary from the company.",
     "assumption.dividend_limited_to_profit_and_retained": "Dividends are limited to current-year profit after salary cost and any opening retained earnings entered by the user.",
     "assumption.municipal_rate_editable": "The municipal tax rate is user-editable and defaults to the national average for the selected year.",
@@ -280,6 +306,9 @@ function applyStaticTranslations() {
   document.querySelectorAll("[data-i18n]").forEach((element) => {
     const params = element.dataset.i18nVars ? JSON.parse(element.dataset.i18nVars) : {};
     element.textContent = t(element.dataset.i18n, params);
+  });
+  document.querySelectorAll("[data-i18n-placeholder]").forEach((element) => {
+    element.setAttribute("placeholder", t(element.dataset.i18nPlaceholder));
   });
   metaDescription.setAttribute("content", t("meta.description"));
   pageTitle.textContent = t("brand.app_name");
@@ -327,16 +356,32 @@ function refreshFormattedInputs() {
   numericInputs.forEach((input) => {
     input.value = formatInputValue(input.value, input.dataset.numberKind);
   });
-  syncSpouseShareDisplay();
+  syncOwnershipDisplay();
 }
 
 function formToObject() {
   const formData = new FormData(form);
   return Object.fromEntries(Array.from(formData.entries()).map(([key, value]) => {
     const field = form.elements.namedItem(key);
-    const kind = field?.dataset?.numberKind || "amount";
+    const kind = field?.dataset?.numberKind;
+    if (!kind) {
+      return [key, String(value || "").trim()];
+    }
     return [key, parseLocaleNumber(value, kind)];
   }));
+}
+
+function getOwnerName(ownerType) {
+  const input = ownerType === "user" ? userDisplayNameInput : spouseDisplayNameInput;
+  const value = String(input?.value || "").trim();
+  if (value) {
+    return value;
+  }
+  return t(ownerType === "user" ? "owner.user_default" : "owner.spouse_default");
+}
+
+function ownerLabel(ownerType, nounKey) {
+  return `${getOwnerName(ownerType)} ${t(nounKey)}`;
 }
 
 function setFieldLabels(year) {
@@ -353,9 +398,12 @@ function setFieldLabels(year) {
   });
 }
 
-function syncSpouseShareDisplay() {
+function syncOwnershipDisplay() {
   const userShare = Math.min(Math.max(parseLocaleNumber(form.elements.namedItem("user_share_percentage").value, "percent"), 0), 100);
-  spouseShareDisplay.value = formatInputValue(100 - userShare, "percent");
+  userShareLabel.textContent = getOwnerName("user");
+  spouseShareLabel.textContent = getOwnerName("spouse");
+  userShareDisplay.textContent = `${formatInputValue(userShare, "percent")} %`;
+  spouseShareDisplay.textContent = `${formatInputValue(100 - userShare, "percent")} %`;
 }
 
 function restoreState() {
@@ -475,17 +523,17 @@ function renderBreakdown(result) {
       [t("label.net_salary"), formatCurrency(salaryTax.net_income)],
     ]),
     breakdownCard(t("breakdown.dividend_room"), [
-      [t("label.user_room"), formatCurrency(spaces.user_space)],
-      [t("label.user_rule"), translateRule(spaces.user_rule_label)],
-      [t("label.spouse_room"), formatCurrency(spaces.spouse_space)],
-      [t("label.spouse_rule"), translateRule(spaces.spouse_rule_label)],
+      [ownerLabel("user", "noun.dividend_room"), formatCurrency(spaces.user_space)],
+      [ownerLabel("user", "noun.rule"), translateRule(spaces.user_rule_label)],
+      [ownerLabel("spouse", "noun.dividend_room"), formatCurrency(spaces.spouse_space)],
+      [ownerLabel("spouse", "noun.rule"), translateRule(spaces.spouse_rule_label)],
       [t("label.salary_basis_year"), String(result.meta.salary_basis_year)],
     ]),
     breakdownCard(t("breakdown.dividend_taxation"), [
-      [t("label.user_qualified_dividend"), formatCurrency(userDividend.qualified_dividend)],
-      [t("label.user_service_taxed_excess"), formatCurrency(userDividend.service_taxed_dividend)],
-      [t("label.spouse_qualified_dividend"), formatCurrency(spouseDividend.qualified_dividend)],
-      [t("label.spouse_service_taxed_excess"), formatCurrency(spouseDividend.service_taxed_dividend)],
+      [ownerLabel("user", "noun.qualified_dividend"), formatCurrency(userDividend.qualified_dividend)],
+      [ownerLabel("user", "noun.service_taxed_excess"), formatCurrency(userDividend.service_taxed_dividend)],
+      [ownerLabel("spouse", "noun.qualified_dividend"), formatCurrency(spouseDividend.qualified_dividend)],
+      [ownerLabel("spouse", "noun.service_taxed_excess"), formatCurrency(spouseDividend.service_taxed_dividend)],
       [t("label.combined_dividend_tax"), formatCurrency(userDividend.total_dividend_tax + spouseDividend.total_dividend_tax)],
     ]),
   ].join("");
@@ -572,20 +620,22 @@ yearInput.addEventListener("change", (event) => {
 
 form.addEventListener("input", saveStateIfFormField);
 form.addEventListener("change", saveStateIfFormField);
-form.addEventListener("change", syncSpouseShareDisplay);
+form.addEventListener("change", syncOwnershipDisplay);
 form.addEventListener("input", (event) => {
-  if (event.target && event.target.name === "user_share_percentage") {
-    syncSpouseShareDisplay();
+  if (event.target && ["user_share_percentage", "user_display_name", "spouse_display_name"].includes(event.target.name)) {
+    syncOwnershipDisplay();
   }
 });
 
 numericInputs.forEach((input) => {
   input.addEventListener("blur", () => {
     input.value = formatInputValue(input.value, input.dataset.numberKind);
-    if (input.name === "user_share_percentage") {
-      syncSpouseShareDisplay();
-    }
   });
+});
+
+userShareSlider.addEventListener("input", () => {
+  syncOwnershipDisplay();
+  saveState();
 });
 
 languageSwitch.addEventListener("change", (event) => {

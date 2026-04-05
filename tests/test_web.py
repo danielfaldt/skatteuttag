@@ -11,6 +11,9 @@ def test_index_renders():
     assert response.status_code == 200
     assert "Skatteuttag" in response.text
     assert 'id="language-switch"' in response.text
+    assert 'id="user-share-slider"' in response.text
+    assert 'name="user_display_name"' in response.text
+    assert 'name="spouse_display_name"' in response.text
 
 
 def test_api_calculate_returns_json():
@@ -33,3 +36,4 @@ def test_client_script_persists_form_state_on_input():
     assert 'localStorage.setItem(STORAGE_KEY, JSON.stringify(formToObject()));' in body
     assert "formatInputValue" in body
     assert 'name="user_share_percentage"' in client.get("/").text
+    assert "syncOwnershipDisplay" in body

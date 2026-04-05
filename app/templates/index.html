@@ -30,9 +30,6 @@
               <option value="en">English</option>
             </select>
           </label>
-          <span class="pill" data-i18n="hero.supported_years" data-i18n-vars='{"years":"{{ supported_years | join(", ") }}"}'>Supported years: {{ supported_years | join(", ") }}</span>
-          <span class="pill" data-i18n="hero.ownership">50/50 spouse ownership</span>
-          <span class="pill" data-i18n="hero.persistence">Local browser persistence</span>
         </div>
       </section>
 
@@ -107,20 +104,54 @@
             </div>
             <div class="field-grid">
               <label class="field">
-                <span data-i18n="field.user_share_percentage">User ownership share</span>
-                <div class="inline-input">
-                  <input name="user_share_percentage" type="text" inputmode="decimal" class="js-number" data-number-kind="percent" value="{{ defaults.user_share_percentage }}">
-                  <small>%</small>
-                </div>
+                <span data-i18n="field.user_display_name">User name</span>
+                <input
+                  id="user-display-name"
+                  name="user_display_name"
+                  type="text"
+                  maxlength="40"
+                  data-i18n-placeholder="placeholder.user_display_name"
+                  placeholder="Your name"
+                  value="{{ defaults.user_display_name if defaults.user_display_name is defined else '' }}"
+                >
               </label>
 
               <label class="field">
-                <span data-i18n="field.spouse_share_percentage">Spouse ownership share</span>
-                <div class="inline-input">
-                  <input name="spouse_share_percentage_display" type="text" readonly id="spouse-share-display">
-                  <small>%</small>
-                </div>
+                <span data-i18n="field.spouse_display_name">Spouse name</span>
+                <input
+                  id="spouse-display-name"
+                  name="spouse_display_name"
+                  type="text"
+                  maxlength="40"
+                  data-i18n-placeholder="placeholder.spouse_display_name"
+                  placeholder="Spouse name"
+                  value="{{ defaults.spouse_display_name if defaults.spouse_display_name is defined else '' }}"
+                >
               </label>
+
+              <div class="field field-span-2 ownership-field">
+                <span data-i18n="field.user_share_percentage">User ownership share</span>
+                <div class="ownership-values">
+                  <div class="ownership-value">
+                    <small id="user-share-label" data-i18n="field.user_share_percentage">User ownership share</small>
+                    <strong id="user-share-display">{{ defaults.user_share_percentage }} %</strong>
+                  </div>
+                  <div class="ownership-value ownership-value-right">
+                    <small id="spouse-share-label" data-i18n="field.spouse_share_percentage">Spouse ownership share</small>
+                    <strong id="spouse-share-display">{{ 100 - defaults.user_share_percentage }} %</strong>
+                  </div>
+                </div>
+                <input
+                  id="user-share-slider"
+                  name="user_share_percentage"
+                  type="range"
+                  min="1"
+                  max="99"
+                  step="1"
+                  value="{{ defaults.user_share_percentage }}"
+                  data-number-kind="percent"
+                >
+              </div>
 
               <label class="field">
                 <span data-i18n="field.saved_dividend_space_user">User saved dividend space</span>
