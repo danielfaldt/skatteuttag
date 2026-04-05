@@ -302,6 +302,7 @@ def generate_pdf_report(payload: dict[str, Any], language: str = "sv") -> bytes:
     ownership = result["ownership_suggestion"]
     user_name = owner_name(input_data["user_display_name"], copy["label_user_name"])
     spouse_name = owner_name(input_data["spouse_display_name"], copy["label_spouse_name"])
+    spouse_share_percentage = round(100.0 - float(input_data["user_share_percentage"]), 1)
 
     buffer = BytesIO()
     document = SimpleDocTemplate(
@@ -344,7 +345,7 @@ def generate_pdf_report(payload: dict[str, Any], language: str = "sv") -> bytes:
                 (copy["label_user_birth_year"], str(input_data["user_birth_year"])),
                 (copy["label_spouse_birth_year"], str(input_data["spouse_birth_year"])),
                 (copy["label_user_share"], percentage(input_data["user_share_percentage"], language)),
-                (copy["label_spouse_share"], percentage(input_data["spouse_share_percentage"], language)),
+                (copy["label_spouse_share"], percentage(spouse_share_percentage, language)),
                 (copy["label_user_saved_space"], money(input_data["saved_dividend_space_user"], language)),
                 (copy["label_spouse_saved_space"], money(input_data["saved_dividend_space_spouse"], language)),
                 (copy["label_user_cost_basis"], money(input_data["user_share_cost_basis"], language)),
