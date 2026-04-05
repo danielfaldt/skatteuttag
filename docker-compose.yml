@@ -1,0 +1,23 @@
+services:
+  web:
+    build: .
+    env_file:
+      - .env.dev
+    ports:
+      - "31847:31847"
+    command:
+      [
+        "uvicorn",
+        "app.main:app",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "31847"
+      ]
+    restart: unless-stopped
+
+  test:
+    build: .
+    env_file:
+      - .env.dev
+    command: ["pytest"]

@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="sv">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ app_name }}</title>
+    <meta
+      name="description"
+      content="Salary and dividend planning for a Swedish limited company with transparent year-based tax logic."
+    >
+    <link rel="stylesheet" href="{{ url_for('static', path='styles.css') }}">
+  </head>
+  <body>
+    <main class="shell">
+      <section class="hero card">
+        <div>
+          <p class="eyebrow">Swedish tax planning for owner-managed companies</p>
+          <h1>{{ app_name }}</h1>
+          <p class="lede">
+            Plan salary and dividends for a Swedish limited company with one chosen planning year.
+            The app explains how the payout year and the salary-base year interact.
+          </p>
+        </div>
+        <div class="hero-note">
+          <span class="pill">Supported years: {{ supported_years | join(", ") }}</span>
+          <span class="pill">50/50 spouse ownership</span>
+          <span class="pill">Local browser persistence</span>
+        </div>
+      </section>
+
+      <section class="layout">
+        <form id="planner-form" class="panel card" novalidate>
+          <div class="section-header">
+            <h2>Inputs</h2>
+            <p>All amounts are annual SEK values.</p>
+          </div>
+
+          <div class="field-grid">
+            <label class="field">
+              <span>Planning year</span>
+              <select name="year" id="year">
+                {% for year in supported_years %}
+                <option value="{{ year }}" {% if year == defaults.year %}selected{% endif %}>{{ year }}</option>
+                {% endfor %}
+              </select>
+            </label>
+
+            <label class="field">
+              <span>Desired user net income after tax</span>
+              <input name="target_user_net_income" type="number" min="0" step="1000" value="{{ defaults.target_user_net_income }}">
+            </label>
+
+            <label class="field">
+              <span>Spouse salary from other employer</span>
+              <input name="spouse_external_salary" type="number" min="0" step="1000" value="{{ defaults.spouse_external_salary }}">
+            </label>
+
+            <label class="field">
+              <span>Company profit before owner salary and employer charges</span>
+              <input name="company_profit_before_owner_salary" type="number" min="0" step="1000" value="{{ defaults.company_profit_before_owner_salary }}">
+            </label>
+
+            <label class="field">
+              <span>Opening retained earnings available for dividends</span>
+              <input name="opening_retained_earnings" type="number" min="0" step="1000" value="{{ defaults.opening_retained_earnings }}">
+            </label>
+
+            <label class="field">
+              <span>Municipal tax rate</span>
+              <div class="inline-input">
+                <input name="municipal_tax_rate" type="number" min="25" max="40" step="0.01" value="{{ defaults.municipal_tax_rate }}">
+                <small>%</small>
+              </div>
+            </label>
+          </div>
+
+          <div class="subsection">
+            <div class="section-header">
+              <h3>Salary-base year for dividend room</h3>
+              <p id="salary-basis-text">For planning year {{ defaults.year }}, the dividend room looks back to salary year {{ defaults.year - 1 }}.</p>
+            </div>
+            <div class="field-grid">
+              <label class="field">
+                <span id="company-salary-label">Company cash salaries in {{ defaults.year - 1 }}</span>
+                <input name="prior_year_company_cash_salaries" type="number" min="0" step="1000" value="{{ defaults.prior_year_company_cash_salaries }}">
+              </label>
+
+              <label class="field">
+                <span id="user-salary-label">User salary from the company in {{ defaults.year - 1 }}</span>
+                <input name="prior_year_user_company_salary" type="number" min="0" step="1000" value="{{ defaults.prior_year_user_company_salary }}">
+              </label>
+            </div>
+          </div>
+
+          <div class="subsection">
+            <div class="section-header">
+              <h3>Shareholder values</h3>
+              <p>Saved dividend room and cost basis are entered separately for each owner.</p>
+            </div>
+            <div class="field-grid">
+              <label class="field">
+                <span>User saved dividend space</span>
+                <input name="saved_dividend_space_user" type="number" min="0" step="1000" value="{{ defaults.saved_dividend_space_user }}">
+              </label>
+
+              <label class="field">
+                <span>Spouse saved dividend space</span>
+                <input name="saved_dividend_space_spouse" type="number" min="0" step="1000" value="{{ defaults.saved_dividend_space_spouse }}">
+              </label>
+
+              <label class="field">
+                <span>User share cost basis</span>
+                <input name="user_share_cost_basis" type="number" min="0" step="1000" value="{{ defaults.user_share_cost_basis }}">
+              </label>
+
+              <label class="field">
+                <span>Spouse share cost basis</span>
+                <input name="spouse_share_cost_basis" type="number" min="0" step="1000" value="{{ defaults.spouse_share_cost_basis }}">
+              </label>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button type="submit">Calculate recommendation</button>
+            <button type="button" id="reset-values" class="secondary">Reset saved values</button>
+          </div>
+          <p class="helper">
+            The app stores your form values in local browser storage and restores them on reload.
+          </p>
+        </form>
+
+        <section class="results">
+          <div id="error-box" class="card error hidden"></div>
+
+          <div class="card result-card">
+            <div class="section-header">
+              <h2>Recommended plan</h2>
+              <p>Closest to the target, then biased toward lower total tax.</p>
+            </div>
+            <div id="recommendation-summary" class="metric-grid empty-state">
+              Submit the form to generate a recommendation.
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="section-header">
+              <h2>Breakdown</h2>
+              <p>Company cash flow, salary tax, dividend tax, and dividend room.</p>
+            </div>
+            <div id="breakdown-grid" class="stacked-grid"></div>
+          </div>
+
+          <div class="card">
+            <div class="section-header">
+              <h2>Alternative scenarios</h2>
+              <p>Useful comparison points around the recommendation.</p>
+            </div>
+            <div id="alternatives"></div>
+          </div>
+
+          <div class="card">
+            <div class="section-header">
+              <h2>How the result was derived</h2>
+              <p>Year linkage, assumptions, and rule notes.</p>
+            </div>
+            <div id="assumptions" class="note-list"></div>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script>
+      window.APP_DEFAULTS = {{ defaults | tojson }};
+      window.APP_BASE_URL = {{ app_base_url | tojson }};
+    </script>
+    <script src="{{ url_for('static', path='app.js') }}" defer></script>
+  </body>
+</html>
