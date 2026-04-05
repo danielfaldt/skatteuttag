@@ -10,3 +10,5 @@
 - `T008` Add a richer breakdown for scenarios where dividends exceed the service-tax ceiling and spill back into capital taxation.
 - `T009` Expand the PDF export with appendix pages, signature metadata, and per-owner municipality/tax details.
 - `T010` Add future production deployment tasks, including Nginx Proxy Manager hostname configuration and production URL wiring.
+- `T011` Add export and import of planning data as JSON so scenarios can be moved between browsers and archived outside local storage.
+- `T012` Separate target-fit optimization from tax-minimization in the result view so the app can show both the closest-to-target plan and the lowest-tax plan when they differ materially.
