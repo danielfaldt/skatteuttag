@@ -6,6 +6,8 @@
 
 ## Open
 
+- [ ] T015 · Förklaring av hur analysen gått till beskriven i text/formel eller liknande
+- [ ] T014 · Styrparametrarna ska kunna justeras. Maximalt uttag/minimal skatt, minsta ”löneuttag netto” (inkl utdelning för båda)
 - [ ] T013 · Ägarfördelning jämförs i bakgrunden -> Även indikerat på "Slutgiltigt förslag" att den inte är färdigbehandlad. Formulera om denna även.
 - [ ] T001 · Add support for planning years beyond `2026` once official constants and K10 rule details are available.
 - [ ] T002 · Add separate municipality tax inputs per owner, including burial fee and optional faith-community fee.
@@ -19,7 +21,5 @@
 - [ ] T010 · Add future production deployment tasks, including Nginx Proxy Manager hostname configuration and production URL wiring.
 - [ ] T011 · Add export and import of planning data as JSON so scenarios can be moved between browsers and archived outside local storage.
 - [ ] T012 · Separate target-fit optimization from tax-minimization in the result view so the app can show both the closest-to-target plan and the lowest-tax plan when they differ materially.
-- [ ] T014 · Styrparametrarna ska kunna justeras. Maximalt uttag/minimal skatt, minsta ”löneuttag netto” (inkl utdelning för båda)
-- [ ] T015 · Förklaring av hur analysen gått till beskriven i text/formel eller liknande
 
 ## Closed
