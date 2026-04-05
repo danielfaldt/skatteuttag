@@ -221,6 +221,13 @@ body {
   align-items: flex-start;
 }
 
+.field-columns .field > span,
+.field-columns .field > .label-row,
+.field-grid .field > span,
+.field-grid .field > .label-row {
+  min-height: 2.4em;
+}
+
 .field small {
   color: var(--muted);
   line-height: 1.45;
@@ -706,6 +713,26 @@ button[type="submit"] {
   background: #f6faf8;
   border: 1px solid var(--line);
   color: var(--text);
+}
+
+.final-plan-note {
+  background: linear-gradient(180deg, #f4faf7 0%, #eef7f3 100%);
+  border-color: rgba(29, 122, 99, 0.16);
+}
+
+.final-plan-summary,
+.final-plan-status {
+  margin: 0;
+}
+
+.final-plan-summary {
+  margin-top: 8px;
+  line-height: 1.55;
+}
+
+.final-plan-status {
+  margin-top: 10px;
+  color: var(--muted);
 }
 
 .error {

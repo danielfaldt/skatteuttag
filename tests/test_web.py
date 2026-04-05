@@ -14,6 +14,7 @@ def test_index_renders():
     assert 'id="export-pdf"' in response.text
     assert 'data-i18n="button.export_pdf"' in response.text
     assert 'id="compensation-mix-analysis"' in response.text
+    assert 'id="final-plan-summary"' in response.text
     assert 'id="user-share-slider"' in response.text
     assert 'name="user_display_name"' in response.text
     assert 'name="spouse_display_name"' in response.text
@@ -101,6 +102,8 @@ def test_client_script_persists_form_state_on_input():
     assert "mix.title" in body
     assert "mix.summary_mixed" in body
     assert "mix.comparison_more_salary" in body
+    assert "recommended.final_title" in body
+    assert "renderFinalPlan" in body
     assert "ownership-comparison-row" in body
     assert "/api/municipal-tax/" in body
     assert "tax-municipality" in body

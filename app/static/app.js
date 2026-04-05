@@ -7,6 +7,7 @@ const languageSwitch = document.querySelector("#language-switch");
 const exportPdfButton = document.querySelector("#export-pdf");
 const errorBox = document.querySelector("#error-box");
 const summaryBox = document.querySelector("#recommendation-summary");
+const finalPlanBox = document.querySelector("#final-plan-summary");
 const breakdownGrid = document.querySelector("#breakdown-grid");
 const alternativesBox = document.querySelector("#alternatives");
 const assumptionsBox = document.querySelector("#assumptions");
@@ -115,6 +116,12 @@ const TRANSLATIONS = {
     "recommended.title": "Rekommenderad plan",
     "recommended.subtitle": "Närmast målet, därefter prioritet på lägre total skatt.",
     "recommended.empty": "Skicka formuläret för att få en rekommendation.",
+    "recommended.final_title": "Slutligt förslag",
+    "recommended.final_summary_current": "Ta ut {salary} i lön, {dividend} i total utdelning och behåll aktiefördelningen {userName} {userShare} % / {spouseName} {spouseShare} %.",
+    "recommended.final_summary_suggested": "Ta ut {salary} i lön, {dividend} i total utdelning och överväg aktiefördelningen {userName} {userShare} % / {spouseName} {spouseShare} %.",
+    "recommended.final_status_pending": "Ägarfördelningen verifieras fortfarande i bakgrunden.",
+    "recommended.final_status_same": "Det här är modellens bästa helhetsförslag givet nuvarande indata.",
+    "recommended.final_status_better": "Modellen hittar lägre total skatt med den föreslagna aktiefördelningen än med nuvarande fördelning.",
     "breakdown.title": "Nedbrytning",
     "breakdown.subtitle": "Bolagets kassaflöde, löneskatt, utdelningsskatt och utdelningsutrymme.",
     "alternatives.title": "Alternativa scenarier",
@@ -316,6 +323,12 @@ const TRANSLATIONS = {
     "recommended.title": "Recommended plan",
     "recommended.subtitle": "Closest to the target, then biased toward lower total tax.",
     "recommended.empty": "Submit the form to generate a recommendation.",
+    "recommended.final_title": "Final recommendation",
+    "recommended.final_summary_current": "Take {salary} as salary, {dividend} as total dividend, and keep the ownership split at {userName} {userShare}% / {spouseName} {spouseShare}%.",
+    "recommended.final_summary_suggested": "Take {salary} as salary, {dividend} as total dividend, and consider the ownership split {userName} {userShare}% / {spouseName} {spouseShare}%.",
+    "recommended.final_status_pending": "The ownership split is still being verified in the background.",
+    "recommended.final_status_same": "This is the model's best overall proposal based on the current inputs.",
+    "recommended.final_status_better": "The model finds lower total tax with the suggested ownership split than with the current split.",
     "breakdown.title": "Breakdown",
     "breakdown.subtitle": "Company cash flow, salary tax, dividend tax, and dividend room.",
     "alternatives.title": "Alternative scenarios",
@@ -1021,6 +1034,32 @@ function renderMetrics(result) {
   `;
 }
 
+function renderFinalPlan(result) {
+  const recommendation = result.recommended;
+  const suggestion = result.ownership_suggestion;
+  const userShare = suggestion ? suggestion.suggested_user_share_percentage : result.input.user_share_percentage;
+  const spouseShare = suggestion ? suggestion.suggested_spouse_share_percentage : (100 - result.input.user_share_percentage);
+  const summaryKey = suggestion ? "recommended.final_summary_suggested" : "recommended.final_summary_current";
+  const statusKey = suggestion
+    ? "recommended.final_status_better"
+    : (result.ownership_suggestion === undefined ? "recommended.final_status_pending" : "recommended.final_status_same");
+
+  finalPlanBox.innerHTML = `
+    <div class="note final-plan-note">
+      <strong>${t("recommended.final_title")}</strong>
+      <p class="final-plan-summary">${t(summaryKey, {
+        salary: formatCurrency(recommendation.salary),
+        dividend: formatCurrency(recommendation.total_dividend),
+        userName: getOwnerName("user"),
+        spouseName: getOwnerName("spouse"),
+        userShare: formatInputValue(userShare, "percent"),
+        spouseShare: formatInputValue(spouseShare, "percent"),
+      })}</p>
+      <div class="final-plan-status">${t(statusKey)}</div>
+    </div>
+  `;
+}
+
 function comparisonDeltaText(type, amount) {
   if (Math.abs(amount) < 1) {
     amount = 0;
@@ -1250,6 +1289,7 @@ function clearError() {
 function setLoadingState() {
   summaryBox.classList.add("empty-state");
   summaryBox.innerHTML = `<span>${t("status.calculating")}</span>`;
+  finalPlanBox.innerHTML = "";
   compensationMixBox.innerHTML = "";
   ownershipSuggestionBox.innerHTML = `
     <div class="note ownership-loading">
@@ -1343,6 +1383,7 @@ async function submitForm() {
   const result = await response.json();
   lastResult = result;
   renderMetrics(result);
+  renderFinalPlan(result);
   renderCompensationMixAnalysis(result);
   renderBreakdown(result);
   renderAlternatives(result);
@@ -1351,6 +1392,7 @@ async function submitForm() {
   try {
     const ownershipResult = await fetchOwnershipAnalysis(payload);
     lastResult = { ...result, ownership_suggestion: ownershipResult.ownership_suggestion };
+    renderFinalPlan(lastResult);
     renderOwnershipSuggestion(lastResult);
   } finally {
     clearLoadingState();
@@ -1453,6 +1495,7 @@ languageSwitch.addEventListener("change", (event) => {
   setFieldLabels(yearInput.value);
   if (lastResult) {
     renderMetrics(lastResult);
+    renderFinalPlan(lastResult);
     renderCompensationMixAnalysis(lastResult);
     renderOwnershipSuggestion(lastResult);
     renderBreakdown(lastResult);
