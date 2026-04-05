@@ -18,7 +18,10 @@ const ownershipSuggestionBox = document.querySelector("#ownership-suggestion");
 const userDisplayNameInput = document.querySelector("#user-display-name");
 const spouseDisplayNameInput = document.querySelector("#spouse-display-name");
 const targetNetIncomeLabel = document.querySelector("#target-net-income-label");
+const userOtherServiceIncomeLabel = document.querySelector("#user-other-service-income-label");
 const spouseExternalSalaryLabel = document.querySelector("#spouse-external-salary-label");
+const userCarBenefitLabel = document.querySelector("#user-car-benefit-label");
+const plannedUserPensionLabel = document.querySelector("#planned-user-pension-label");
 const userShareLabel = document.querySelector("#user-share-label");
 const spouseShareLabel = document.querySelector("#spouse-share-label");
 const userShareDisplay = document.querySelector("#user-share-display");
@@ -60,8 +63,18 @@ const TRANSLATIONS = {
     "field.spouse_share_cost_basis": "Makes/makas omkostnadsbelopp",
     "field.user_display_name": "Användarens namn",
     "field.spouse_display_name": "Makes/makas namn",
+    "field.user_birth_year": "Användarens födelseår",
+    "field.spouse_birth_year": "Makes/makas födelseår",
     "field.user_share_percentage": "Användarens aktieandel",
     "field.spouse_share_percentage": "Makes/makas aktieandel",
+    "field.user_other_service_income": "Användarens övriga tjänsteinkomster",
+    "field.user_car_benefit": "Bilförmån för användaren",
+    "field.planned_user_pension": "Planerad tjänstepension för användaren",
+    "field.periodization_fund_change": "Planerad avsättning (+) eller återföring (-) av periodiseringsfond",
+    "field.periodization_fund_change_hint": "Positivt belopp minskar årets skattemässiga resultat. Negativt belopp betyder återföring från tidigare periodiseringsfond.",
+    "field.opening_retained_earnings_hint": "Ange utdelningsbart fritt eget kapital från senast fastställda bokslut. Årets resultat anges separat ovan.",
+    "compensation.title": "Justeringar i ersättningen",
+    "compensation.subtitle": "Bilförmån, tjänstepension och periodiseringsfond modelleras ovanpå vald kontant lön.",
     "placeholder.user_display_name": "Ditt namn",
     "placeholder.spouse_display_name": "Namn på make/maka",
     "button.calculate": "Beräkna rekommendation",
@@ -77,7 +90,7 @@ const TRANSLATIONS = {
     "assumptions.title": "Så togs resultatet fram",
     "assumptions.subtitle": "Årskoppling, antaganden och regelnoter.",
     "metric.recommended_salary": "Rekommenderad lön",
-    "metric.recommended_salary_sub": "Bruttoårslön från bolaget",
+    "metric.recommended_salary_sub": "Kontant bruttoårslön från bolaget",
     "metric.recommended_dividend": "Rekommenderad total utdelning",
     "metric.recommended_dividend_sub": "Fördelas enligt nuvarande aktieägande",
     "metric.user_net": "Användarens netto från bolaget",
@@ -99,10 +112,19 @@ const TRANSLATIONS = {
     "label.corporate_tax": "Bolagsskatt",
     "label.available_dividend_cash": "Tillgänglig utdelningslikvid",
     "label.gross_salary": "Bruttolön",
+    "label.cash_salary": "Kontant lön",
+    "label.user_other_service_income": "Övriga tjänsteinkomster",
+    "label.car_benefit": "Bilförmån",
+    "label.taxable_company_income": "Skattepliktig ersättning från bolaget",
     "label.base_deduction": "Grundavdrag",
     "label.municipal_tax": "Kommunal skatt",
     "label.state_tax": "Statlig skatt",
+    "label.incremental_salary_tax": "Tillkommande skatt från bolaget",
     "label.net_salary": "Nettolön",
+    "label.net_cash_salary": "Nettokontant lön",
+    "label.pension": "Tjänstepension",
+    "label.pension_slp": "Särskild löneskatt på pension",
+    "label.periodization_fund_change": "Periodiseringsfond",
     "label.user_room": "Användarens utrymme",
     "label.user_rule": "Använd regel",
     "label.spouse_room": "Makes/makas utrymme",
@@ -157,6 +179,11 @@ const TRANSLATIONS = {
     "assumption.municipal_rate_editable": "Kommunalskatten kan ändras av användaren och förifylls med rikssnittet för valt år.",
     "assumption.official_rule_data": "Appen modellerar årsspecifik löneskatt och 3:12-liknande utdelningsskatt med officiella regeldata för 2025 och 2026.",
     "assumption.spouse_salary_affects_service_tax": "Tjänstebeskattad överskjutande utdelning modelleras som extra tjänsteinkomst där lönen från annan arbetsgivare för {spouseName} påverkar skatteeffekten.",
+    "assumption.birth_year_affects_tax": "Födelseår påverkar den personliga beskattningen och arbetsgivaravgiften enligt reglerna som gäller för valt år.",
+    "assumption.user_other_service_income": "Användarens övriga tjänsteinkomster beskattas i modellen som separat tjänsteinkomst utanför bolaget och påverkar marginalskatten.",
+    "assumption.car_benefit_cash_vs_tax": "Bilförmån behandlas som skattepliktig förmån som påverkar skatt och arbetsgivaravgifter, men räknas inte som kontant nettolön mot användarens mål.",
+    "assumption.pension_limit": "Tjänstepensionen valideras mot huvudregelns avdragsram i modellen. Om nivån kräver högre lön väljs bara scenarier där den ryms.",
+    "assumption.periodization_fund": "Positiv periodiseringsfond minskar årets beskattningsbara resultat. Negativt värde tolkas som återföring och förutsätter att sådan fond redan finns.",
     "explanation.salary_uses_planning_year": "Lön som tas ut under {planningYear} beskattas med lönereglerna för {planningYear}.",
     "explanation.dividend_uses_salary_basis_year": "Utdelningsutrymmet för {planningYear} använder lönebasåret {salaryBasisYear}.",
     "explanation.recommendation_scoring": "Rekommendationen minimerar först avståndet till användarens nettomål och föredrar därefter lägre total skatt."
@@ -190,8 +217,18 @@ const TRANSLATIONS = {
     "field.spouse_share_cost_basis": "Spouse share cost basis",
     "field.user_display_name": "User name",
     "field.spouse_display_name": "Spouse name",
+    "field.user_birth_year": "User birth year",
+    "field.spouse_birth_year": "Spouse birth year",
     "field.user_share_percentage": "User ownership share",
     "field.spouse_share_percentage": "Spouse ownership share",
+    "field.user_other_service_income": "User other service income",
+    "field.user_car_benefit": "Annual car benefit value for the user",
+    "field.planned_user_pension": "Planned occupational pension for the user",
+    "field.periodization_fund_change": "Planned periodization fund allocation (+) or reversal (-)",
+    "field.periodization_fund_change_hint": "Positive amounts reduce the current taxable profit. Negative amounts mean reversal from an existing periodization fund balance.",
+    "field.opening_retained_earnings_hint": "Use the distributable retained earnings from the latest adopted accounts. Current-year profit is entered separately above.",
+    "compensation.title": "Compensation adjustments",
+    "compensation.subtitle": "Benefit value, pension, and periodization fund are modelled on top of the selected cash salary.",
     "placeholder.user_display_name": "Your name",
     "placeholder.spouse_display_name": "Spouse name",
     "button.calculate": "Calculate recommendation",
@@ -207,7 +244,7 @@ const TRANSLATIONS = {
     "assumptions.title": "How the result was derived",
     "assumptions.subtitle": "Year linkage, assumptions, and rule notes.",
     "metric.recommended_salary": "Recommended salary",
-    "metric.recommended_salary_sub": "Gross annual salary from the company",
+    "metric.recommended_salary_sub": "Gross annual cash salary from the company",
     "metric.recommended_dividend": "Recommended total dividend",
     "metric.recommended_dividend_sub": "Allocated according to the current ownership split",
     "metric.user_net": "User net income",
@@ -229,10 +266,19 @@ const TRANSLATIONS = {
     "label.corporate_tax": "Corporate tax",
     "label.available_dividend_cash": "Available dividend cash",
     "label.gross_salary": "Gross salary",
+    "label.cash_salary": "Cash salary",
+    "label.user_other_service_income": "Other service income",
+    "label.car_benefit": "Car benefit",
+    "label.taxable_company_income": "Taxable company compensation",
     "label.base_deduction": "Base deduction",
     "label.municipal_tax": "Municipal tax",
     "label.state_tax": "State tax",
+    "label.incremental_salary_tax": "Incremental tax from company",
     "label.net_salary": "Net salary",
+    "label.net_cash_salary": "Net cash salary",
+    "label.pension": "Occupational pension",
+    "label.pension_slp": "Special payroll tax on pension",
+    "label.periodization_fund_change": "Periodization fund",
     "label.user_room": "User room",
     "label.user_rule": "User rule",
     "label.spouse_room": "Spouse room",
@@ -287,6 +333,11 @@ const TRANSLATIONS = {
     "assumption.municipal_rate_editable": "The municipal tax rate is user-editable and defaults to the national average for the selected year.",
     "assumption.official_rule_data": "The app models year-specific salary tax and 3:12-style dividend tax using official 2025 and 2026 rule data.",
     "assumption.spouse_salary_affects_service_tax": "Service-taxed excess dividend is modelled as additional service income with salary from another employer for {spouseName} affecting that personal tax outcome.",
+    "assumption.birth_year_affects_tax": "Birth year affects personal taxation and employer contributions under the rules for the selected year.",
+    "assumption.user_other_service_income": "The user's other service income is modelled as separate non-company service income and affects the marginal tax outcome.",
+    "assumption.car_benefit_cash_vs_tax": "Car benefit is treated as a taxable benefit that affects tax and employer contributions, but it is not counted as cash net income toward the user's target.",
+    "assumption.pension_limit": "The occupational pension is checked against the model's main-rule deduction envelope. If a higher salary is required, only scenarios that fit are kept.",
+    "assumption.periodization_fund": "A positive periodization fund amount reduces current taxable profit. A negative amount is treated as reversal and assumes an existing balance is available.",
     "explanation.salary_uses_planning_year": "Salary paid during {planningYear} is taxed using {planningYear} salary-tax rules.",
     "explanation.dividend_uses_salary_basis_year": "Dividend room for {planningYear} uses the salary base year {salaryBasisYear}.",
     "explanation.recommendation_scoring": "The recommendation minimizes distance to the user's after-tax target and then prefers lower total tax burden."
@@ -343,8 +394,16 @@ function parseLocaleNumber(value, kind = "amount") {
     return 0;
   }
 
-  if (kind === "amount") {
+  if (kind === "amount" || kind === "year") {
     const parsed = Number(raw.replace(/[,.]/g, ""));
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+
+  if (kind === "signed-amount") {
+    const normalized = raw.startsWith("-")
+      ? `-${raw.slice(1).replace(/[,.]/g, "")}`
+      : raw.replace(/[,.]/g, "");
+    const parsed = Number(normalized);
     return Number.isFinite(parsed) ? parsed : 0;
   }
 
@@ -364,6 +423,12 @@ function formatInputValue(value, kind = "amount") {
     return new Intl.NumberFormat(currentLanguage === "sv" ? "sv-SE" : "en-US", {
       minimumFractionDigits: 0,
       maximumFractionDigits: 2,
+    }).format(number);
+  }
+  if (kind === "year") {
+    return new Intl.NumberFormat(currentLanguage === "sv" ? "sv-SE" : "en-US", {
+      maximumFractionDigits: 0,
+      useGrouping: false,
     }).format(number);
   }
   return new Intl.NumberFormat(currentLanguage === "sv" ? "sv-SE" : "en-US", {
@@ -408,10 +473,13 @@ function ownerSpecificText(kind, ownerType, params = {}) {
 
   if (currentLanguage === "sv") {
     if (kind === "target_net_income") return `Önskad nettoinkomst efter skatt för ${owner}`;
+    if (kind === "other_service_income") return `Övriga tjänsteinkomster för ${owner}`;
     if (kind === "external_salary") return `Lön från annan arbetsgivare för ${owner}`;
     if (kind === "salary_from_company") return `Lön från bolaget under ${params.salaryBasisYear} för ${owner}`;
     if (kind === "saved_dividend_space") return `Sparat utdelningsutrymme för ${owner}`;
     if (kind === "share_cost_basis") return `Omkostnadsbelopp för ${owner}`;
+    if (kind === "car_benefit") return `Bilförmån för ${owner}`;
+    if (kind === "pension") return `Planerad tjänstepension för ${owner}`;
     if (kind === "salary_tax") return `Löneskatt för ${owner}`;
     if (kind === "net_from_company") return `Netto från bolaget för ${owner}`;
     if (kind === "net_from_company_sub") return `Närmaste modellerade nivå mot målet för ${owner}`;
@@ -419,10 +487,13 @@ function ownerSpecificText(kind, ownerType, params = {}) {
   }
 
   if (kind === "target_net_income") return `Desired net income after tax for ${owner}`;
+  if (kind === "other_service_income") return `Other service income for ${owner}`;
   if (kind === "external_salary") return `Salary from another employer for ${owner}`;
   if (kind === "salary_from_company") return `Salary from the company in ${params.salaryBasisYear} for ${owner}`;
   if (kind === "saved_dividend_space") return `Saved dividend space for ${owner}`;
   if (kind === "share_cost_basis") return `Share cost basis for ${owner}`;
+  if (kind === "car_benefit") return `Car benefit for ${owner}`;
+  if (kind === "pension") return `Planned occupational pension for ${owner}`;
   if (kind === "salary_tax") return `Salary tax for ${owner}`;
   if (kind === "net_from_company") return `Net income from company for ${owner}`;
   if (kind === "net_from_company_sub") return `Closest modelled value to the target for ${owner}`;
@@ -443,7 +514,10 @@ function setFieldLabels(year) {
     salaryBasisYear,
   });
   targetNetIncomeLabel.textContent = ownerSpecificText("target_net_income", "user");
+  userOtherServiceIncomeLabel.textContent = ownerSpecificText("other_service_income", "user");
   spouseExternalSalaryLabel.textContent = ownerSpecificText("external_salary", "spouse");
+  userCarBenefitLabel.textContent = ownerSpecificText("car_benefit", "user");
+  plannedUserPensionLabel.textContent = ownerSpecificText("pension", "user");
   userSavedDividendSpaceLabel.textContent = ownerSpecificText("saved_dividend_space", "user");
   spouseSavedDividendSpaceLabel.textContent = ownerSpecificText("saved_dividend_space", "spouse");
   userShareCostBasisLabel.textContent = ownerSpecificText("share_cost_basis", "user");
@@ -586,17 +660,25 @@ function renderBreakdown(result) {
   breakdownGrid.innerHTML = [
     breakdownCard(t("breakdown.company_budget"), [
       [t("label.profit_before_owner_salary"), formatCurrency(result.input.company_result_before_corporate_tax)],
-      [t("label.owner_salary"), formatCurrency(recommendation.salary)],
+      [t("label.cash_salary"), formatCurrency(recommendation.salary)],
+      [t("label.car_benefit"), formatCurrency(company.car_benefit)],
       [t("label.employer_contributions"), formatCurrency(company.employer_contributions)],
+      [t("label.pension"), formatCurrency(company.planned_user_pension)],
+      [t("label.pension_slp"), formatCurrency(company.pension_special_payroll_tax)],
+      [t("label.periodization_fund_change"), formatCurrency(company.periodization_fund_change)],
       [t("label.corporate_tax"), formatCurrency(company.corporate_tax)],
       [t("label.available_dividend_cash"), formatCurrency(company.available_dividend_cash)],
     ]),
     breakdownCard(ownerSpecificText("salary_tax", "user"), [
-      [t("label.gross_salary"), formatCurrency(recommendation.salary)],
+      [t("label.cash_salary"), formatCurrency(recommendation.salary)],
+      [t("label.user_other_service_income"), formatCurrency(result.input.user_other_service_income)],
+      [t("label.car_benefit"), formatCurrency(company.car_benefit)],
+      [t("label.taxable_company_income"), formatCurrency(company.taxable_salary_base)],
       [t("label.base_deduction"), formatCurrency(salaryTax.base_deduction)],
       [t("label.municipal_tax"), formatCurrency(salaryTax.municipal_tax)],
       [t("label.state_tax"), formatCurrency(salaryTax.state_tax)],
-      [t("label.net_salary"), formatCurrency(salaryTax.net_income)],
+      [t("label.incremental_salary_tax"), formatCurrency(recommendation.incremental_user_salary_tax)],
+      [t("label.net_cash_salary"), formatCurrency(recommendation.user_net_cash_salary)],
     ]),
     breakdownCard(t("breakdown.dividend_room"), [
       [ownerLabel("user", "noun.dividend_room"), formatCurrency(spaces.user_space)],

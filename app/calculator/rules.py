@@ -3,12 +3,17 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 
-OWNER_SHARE = 0.5
 CORPORATE_TAX_RATE = 0.206
-EMPLOYER_CONTRIBUTION_RATE = 0.3142
+FULL_EMPLOYER_CONTRIBUTION_RATE = 0.3142
+REDUCED_EMPLOYER_CONTRIBUTION_RATE = 0.1021
+SPECIAL_PAYROLL_TAX_RATE = 0.2426
 QUALIFIED_DIVIDEND_TAX_RATE = 0.20
 CAPITAL_TAX_RATE = 0.30
 STATE_INCOME_TAX_RATE = 0.20
+SENIOR_TAX_AGE = 66
+REDUCED_EMPLOYER_CONTRIBUTION_AGE = 67
+PENSION_DEDUCTION_RATE = 0.35
+PENSION_DEDUCTION_PBB_CAP = 10.0
 
 
 @dataclass(frozen=True)
@@ -94,3 +99,17 @@ DIVIDEND_RULES: dict[int, DividendRule] = {
 
 
 SUPPORTED_YEARS = sorted(SALARY_RULES.keys())
+
+
+def age_at_year_start(year: int, birth_year: int) -> int:
+    return year - birth_year - 1
+
+
+def has_senior_tax_treatment(year: int, birth_year: int) -> bool:
+    return age_at_year_start(year, birth_year) >= SENIOR_TAX_AGE
+
+
+def employer_contribution_rate(year: int, birth_year: int) -> float:
+    if age_at_year_start(year, birth_year) >= REDUCED_EMPLOYER_CONTRIBUTION_AGE:
+        return REDUCED_EMPLOYER_CONTRIBUTION_RATE
+    return FULL_EMPLOYER_CONTRIBUTION_RATE

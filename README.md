@@ -4,7 +4,7 @@ Skatteuttag is a developer-focused web application for Swedish compensation plan
 
 The app takes one planning year as the controlling input and derives the relevant rule years from that choice. Salary tax is computed for the selected year, while the wage-linked part of the dividend room uses the salary-base year that legally feeds into that planning year.
 
-The primary company input is the company result before corporate tax. The app then models owner salary, employer contributions, and corporate tax from that starting point.
+The primary company input is the company result before corporate tax. The app then models cash salary, taxable car benefit, employer contributions, occupational pension, special payroll tax on pension, periodization fund changes, and corporate tax from that starting point.
 
 ## Features
 
@@ -12,7 +12,9 @@ The primary company input is the company result before corporate tax. The app th
 - Built-in bilingual UI with Swedish and English
 - Locale-friendly number formatting with thousands separators in the browser
 - Salary and dividend recommendation aimed at the user's target annual net income
+- Birth-year-aware personal tax and employer contribution handling
 - Adjustable ownership split between spouses, plus an indicative ownership suggestion when a different split lowers total tax
+- Additional planning inputs for user service income, car benefit, occupational pension, and periodization fund adjustments
 - Side-by-side alternative scenarios
 - Transparent breakdown of company tax, salary tax, dividend tax, and qualified dividend room
 - Browser local storage for form persistence
@@ -28,8 +30,8 @@ The primary company input is the company result before corporate tax. The app th
 
 - `app/main.py`: FastAPI application, page routes, API route, and lightweight SEO/security routes
 - `app/calculator/rules.py`: year-specific tax and dividend rule tables
-- `app/calculator/tax.py`: salary and service-income tax engine
-- `app/calculator/planner.py`: dividend-room logic, scenario search, and recommendation scoring
+- `app/calculator/tax.py`: salary and service-income tax engine, including senior-age handling
+- `app/calculator/planner.py`: dividend-room logic, company budget modeling, scenario search, and recommendation scoring
 - `app/templates/index.html`: server-rendered shell
 - `app/static/app.js`: form handling, local storage, and result rendering
 - `app/static/styles.css`: application styling
@@ -66,6 +68,11 @@ docker compose --env-file .env.dev run --rm test
 - The company is a Swedish private limited company.
 - The user can set the ownership split between spouses.
 - Only the user receives salary from the company.
+- Birth year affects both personal tax treatment and employer contribution rate.
+- Other service income for the user is modeled separately from company compensation.
+- Taxable car benefit affects salary tax and employer contributions but does not count as cash net income toward the target.
+- Occupational pension is checked against the model's main-rule deduction envelope.
+- Positive periodization fund amounts are treated as allocations; negative values are treated as reversals.
 - The spouse's external salary only affects the spouse's tax result where dividends spill into service taxation.
 - Dividends are limited to current-year post-corporate-tax profit plus any opening retained earnings entered by the user.
 - The app uses a single editable municipal tax rate for both spouses.
@@ -82,6 +89,7 @@ docker compose --env-file .env.dev run --rm test
 
 - The app does not yet support years beyond `2026`.
 - Municipal tax is modeled as one user-provided rate rather than separate municipality, burial fee, and faith-community components.
+- The app does not yet track opening periodization fund balances, so reversals are user-controlled assumptions.
 - The app is an estimation and planning tool, not a filing engine.
 
 ## Source basis

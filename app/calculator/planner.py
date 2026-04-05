@@ -9,17 +9,25 @@ from .rules import (
     CAPITAL_TAX_RATE,
     CORPORATE_TAX_RATE,
     DIVIDEND_RULES,
-    EMPLOYER_CONTRIBUTION_RATE,
+    PENSION_DEDUCTION_PBB_CAP,
+    PENSION_DEDUCTION_RATE,
     QUALIFIED_DIVIDEND_TAX_RATE,
     SALARY_RULES,
+    SPECIAL_PAYROLL_TAX_RATE,
     SUPPORTED_YEARS,
+    employer_contribution_rate,
 )
 from .tax import compute_personal_tax
 
 
 class PlanningInput(BaseModel):
     year: int = Field(default=2026)
+    user_display_name: str = Field(default="", max_length=40)
+    spouse_display_name: str = Field(default="", max_length=40)
+    user_birth_year: int = Field(default=1985, ge=1900, le=2010)
+    spouse_birth_year: int = Field(default=1985, ge=1900, le=2010)
     target_user_net_income: float = Field(default=650_000, ge=0)
+    user_other_service_income: float = Field(default=0, ge=0)
     spouse_external_salary: float = Field(default=520_000, ge=0)
     company_result_before_corporate_tax: float = Field(
         default=1_600_000,
@@ -27,6 +35,9 @@ class PlanningInput(BaseModel):
         validation_alias=AliasChoices("company_result_before_corporate_tax", "company_profit_before_owner_salary"),
     )
     opening_retained_earnings: float = Field(default=0, ge=0)
+    planned_user_pension: float = Field(default=0, ge=0)
+    periodization_fund_change: float = Field(default=0)
+    user_car_benefit: float = Field(default=0, ge=0)
     prior_year_company_cash_salaries: float = Field(default=520_000, ge=0)
     prior_year_user_company_salary: float = Field(default=520_000, ge=0)
     saved_dividend_space_user: float = Field(default=0, ge=0)
@@ -183,18 +194,57 @@ def compute_dividend_spaces(data: PlanningInput) -> DividendSpaceResult:
     )
 
 
+def pension_deduction_limit(year: int, salary_base: float) -> float:
+    rule = SALARY_RULES[year]
+    return min(max(salary_base, 0.0) * PENSION_DEDUCTION_RATE, rule.pbb * PENSION_DEDUCTION_PBB_CAP)
+
+
 def compute_company_budget(data: PlanningInput, planned_salary: float) -> dict[str, float]:
-    employer_contributions = planned_salary * EMPLOYER_CONTRIBUTION_RATE
-    profit_after_salary_cost = data.company_result_before_corporate_tax - planned_salary - employer_contributions
-    taxable_profit = max(profit_after_salary_cost, 0.0)
+    taxable_salary_base = planned_salary + data.user_car_benefit
+    current_employer_contribution_rate = employer_contribution_rate(data.year, data.user_birth_year)
+    employer_contributions = taxable_salary_base * current_employer_contribution_rate
+    pension_special_payroll_tax = data.planned_user_pension * SPECIAL_PAYROLL_TAX_RATE
+    pension_limit = pension_deduction_limit(data.year, taxable_salary_base)
+    if data.planned_user_pension > pension_limit + 1:
+        return {
+            "valid": False,
+            "pension_deduction_limit": round(pension_limit, 2),
+            "max_periodization_allocation": 0.0,
+        }
+
+    profit_before_periodization = (
+        data.company_result_before_corporate_tax
+        - planned_salary
+        - employer_contributions
+        - data.planned_user_pension
+        - pension_special_payroll_tax
+    )
+    max_periodization_allocation = max(profit_before_periodization, 0.0) * 0.25
+    if data.periodization_fund_change > max_periodization_allocation + 1:
+        return {
+            "valid": False,
+            "pension_deduction_limit": round(pension_limit, 2),
+            "max_periodization_allocation": round(max_periodization_allocation, 2),
+        }
+
+    taxable_profit = max(profit_before_periodization - data.periodization_fund_change, 0.0)
     corporate_tax = taxable_profit * CORPORATE_TAX_RATE
     post_tax_profit = taxable_profit - corporate_tax
     available_dividend_cash = data.opening_retained_earnings + post_tax_profit
 
     return {
+        "valid": True,
         "planned_salary": round(planned_salary, 2),
+        "taxable_salary_base": round(taxable_salary_base, 2),
+        "car_benefit": round(data.user_car_benefit, 2),
+        "employer_contribution_rate": round(current_employer_contribution_rate, 4),
         "employer_contributions": round(employer_contributions, 2),
-        "profit_after_salary_cost": round(profit_after_salary_cost, 2),
+        "planned_user_pension": round(data.planned_user_pension, 2),
+        "pension_special_payroll_tax": round(pension_special_payroll_tax, 2),
+        "pension_deduction_limit": round(pension_limit, 2),
+        "profit_before_periodization": round(profit_before_periodization, 2),
+        "periodization_fund_change": round(data.periodization_fund_change, 2),
+        "max_periodization_allocation": round(max_periodization_allocation, 2),
         "taxable_profit": round(taxable_profit, 2),
         "corporate_tax": round(corporate_tax, 2),
         "post_tax_profit": round(post_tax_profit, 2),
@@ -210,6 +260,7 @@ def compute_dividend_outcome(
     baseline_earned_income: float,
     baseline_service_income: float,
     municipal_tax_rate: float,
+    birth_year: int,
 ) -> dict[str, float]:
     rule = DIVIDEND_RULES[year]
     baseline_tax = compute_personal_tax(
@@ -217,6 +268,7 @@ def compute_dividend_outcome(
         earned_income=baseline_earned_income,
         service_income=baseline_service_income,
         municipal_rate=municipal_tax_rate,
+        birth_year=birth_year,
     )
     qualified_dividend = min(owner_dividend, owner_space)
     qualified_tax = qualified_dividend * QUALIFIED_DIVIDEND_TAX_RATE
@@ -229,6 +281,7 @@ def compute_dividend_outcome(
         earned_income=baseline_earned_income,
         service_income=baseline_service_income + service_taxed_dividend,
         municipal_rate=municipal_tax_rate,
+        birth_year=birth_year,
     )
     incremental_service_tax = after_tax_with_service.total_tax - baseline_tax.total_tax
     capital_excess_tax = capital_taxed_excess * CAPITAL_TAX_RATE
@@ -249,22 +302,36 @@ def compute_dividend_outcome(
 
 def evaluate_plan(data: PlanningInput, planned_salary: float, total_dividend: float) -> dict[str, Any] | None:
     company = compute_company_budget(data, planned_salary)
-    if company["profit_after_salary_cost"] < 0:
+    if not company["valid"]:
+        return None
+    if company["profit_before_periodization"] < 0:
         return None
     if total_dividend > company["available_dividend_cash"] + 1:
         return None
 
     spaces = compute_dividend_spaces(data)
+    user_baseline_tax = compute_personal_tax(
+        year=data.year,
+        earned_income=0.0,
+        service_income=data.user_other_service_income,
+        municipal_rate=data.municipal_tax_rate,
+        birth_year=data.user_birth_year,
+    )
     user_salary_tax = compute_personal_tax(
         year=data.year,
-        earned_income=planned_salary,
+        earned_income=planned_salary + data.user_car_benefit,
+        service_income=data.user_other_service_income,
         municipal_rate=data.municipal_tax_rate,
+        birth_year=data.user_birth_year,
     )
     spouse_baseline_tax = compute_personal_tax(
         year=data.year,
         earned_income=data.spouse_external_salary,
         municipal_rate=data.municipal_tax_rate,
+        birth_year=data.spouse_birth_year,
     )
+    incremental_user_salary_tax = user_salary_tax.total_tax - user_baseline_tax.total_tax
+    user_net_cash_salary = planned_salary - incremental_user_salary_tax
 
     user_dividend = total_dividend * data.user_share_fraction
     spouse_dividend = total_dividend * data.spouse_share_fraction
@@ -273,9 +340,10 @@ def evaluate_plan(data: PlanningInput, planned_salary: float, total_dividend: fl
         owner_dividend=user_dividend,
         owner_space=spaces.user_space,
         year=data.year,
-        baseline_earned_income=planned_salary,
-        baseline_service_income=0.0,
+        baseline_earned_income=planned_salary + data.user_car_benefit,
+        baseline_service_income=data.user_other_service_income,
         municipal_tax_rate=data.municipal_tax_rate,
+        birth_year=data.user_birth_year,
     )
     spouse_dividend_result = compute_dividend_outcome(
         owner_dividend=spouse_dividend,
@@ -284,16 +352,25 @@ def evaluate_plan(data: PlanningInput, planned_salary: float, total_dividend: fl
         baseline_earned_income=data.spouse_external_salary,
         baseline_service_income=0.0,
         municipal_tax_rate=data.municipal_tax_rate,
+        birth_year=data.spouse_birth_year,
     )
 
-    user_net_from_company = user_salary_tax.net_income + user_dividend_result["net_dividend"]
+    user_net_from_company = user_net_cash_salary + user_dividend_result["net_dividend"]
     household_net_from_company = user_net_from_company + spouse_dividend_result["net_dividend"]
-    extraction_total = planned_salary + company["employer_contributions"] + total_dividend + company["corporate_tax"]
+    extraction_total = (
+        planned_salary
+        + company["employer_contributions"]
+        + company["planned_user_pension"]
+        + company["pension_special_payroll_tax"]
+        + total_dividend
+        + company["corporate_tax"]
+    )
     total_tax_burden = (
-        user_salary_tax.total_tax
+        incremental_user_salary_tax
         + user_dividend_result["total_dividend_tax"]
         + spouse_dividend_result["total_dividend_tax"]
         + company["employer_contributions"]
+        + company["pension_special_payroll_tax"]
         + company["corporate_tax"]
     )
 
@@ -311,6 +388,9 @@ def evaluate_plan(data: PlanningInput, planned_salary: float, total_dividend: fl
         "total_tax_burden": round(total_tax_burden, 2),
         "company": company,
         "salary_tax": user_salary_tax.to_dict(),
+        "user_baseline_tax": user_baseline_tax.to_dict(),
+        "incremental_user_salary_tax": round(incremental_user_salary_tax, 2),
+        "user_net_cash_salary": round(user_net_cash_salary, 2),
         "spouse_baseline_tax": spouse_baseline_tax.to_dict(),
         "dividend_spaces": spaces.to_dict(),
         "user_dividend": user_dividend_result,
@@ -320,7 +400,7 @@ def evaluate_plan(data: PlanningInput, planned_salary: float, total_dividend: fl
 
 def choose_dividend_for_salary(data: PlanningInput, salary: float) -> dict[str, Any] | None:
     company = compute_company_budget(data, salary)
-    if company["profit_after_salary_cost"] < 0:
+    if not company["valid"] or company["profit_before_periodization"] < 0:
         return None
 
     max_dividend = company["available_dividend_cash"]
@@ -365,7 +445,10 @@ def build_alternative_scenarios(data: PlanningInput, evaluated: list[dict[str, A
     if not evaluated:
         return []
 
-    state_threshold_gross = SALARY_RULES[data.year].state_tax_threshold_taxable + 17_400
+    state_threshold_gross = max(
+        SALARY_RULES[data.year].state_tax_threshold_taxable + 17_400 - data.user_other_service_income - data.user_car_benefit,
+        0.0,
+    )
     recommendations = []
 
     recommendations.append(
@@ -426,7 +509,13 @@ def build_split_variant(data: PlanningInput, user_share_percentage: float) -> Pl
 
 
 def plan_core(data: PlanningInput) -> dict[str, Any]:
-    max_salary = data.company_result_before_corporate_tax / (1 + EMPLOYER_CONTRIBUTION_RATE)
+    current_employer_contribution_rate = employer_contribution_rate(data.year, data.user_birth_year)
+    fixed_costs = (
+        data.planned_user_pension
+        + (data.planned_user_pension * SPECIAL_PAYROLL_TAX_RATE)
+        + (data.user_car_benefit * current_employer_contribution_rate)
+    )
+    max_salary = max((data.company_result_before_corporate_tax - fixed_costs) / (1 + current_employer_contribution_rate), 0.0)
     step = 5_000 if max_salary > 300_000 else 2_500
     evaluated: list[dict[str, Any]] = []
 
@@ -547,6 +636,11 @@ def plan_compensation(payload: dict[str, Any], *, include_ownership_analysis: bo
             {"key": "assumption.municipal_rate_editable", "params": {"year": data.year}},
             {"key": "assumption.official_rule_data", "params": {}},
             {"key": "assumption.spouse_salary_affects_service_tax", "params": {}},
+            {"key": "assumption.birth_year_affects_tax", "params": {}},
+            {"key": "assumption.user_other_service_income", "params": {}},
+            {"key": "assumption.car_benefit_cash_vs_tax", "params": {}},
+            {"key": "assumption.pension_limit", "params": {}},
+            {"key": "assumption.periodization_fund", "params": {}},
         ],
         "explanations": [
             {"key": "explanation.salary_uses_planning_year", "params": {"planningYear": data.year}},

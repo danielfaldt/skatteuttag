@@ -66,6 +66,16 @@
                 value="{{ defaults.spouse_display_name if defaults.spouse_display_name is defined else '' }}"
               >
             </label>
+
+            <label class="field">
+              <span data-i18n="field.user_birth_year">User birth year</span>
+              <input name="user_birth_year" type="text" inputmode="numeric" class="js-number" data-number-kind="year" value="{{ defaults.user_birth_year if defaults.user_birth_year is defined else 1985 }}">
+            </label>
+
+            <label class="field">
+              <span data-i18n="field.spouse_birth_year">Spouse birth year</span>
+              <input name="spouse_birth_year" type="text" inputmode="numeric" class="js-number" data-number-kind="year" value="{{ defaults.spouse_birth_year if defaults.spouse_birth_year is defined else 1985 }}">
+            </label>
           </div>
 
           <div class="field-grid">
@@ -84,6 +94,11 @@
             </label>
 
             <label class="field">
+              <span id="user-other-service-income-label" data-i18n="field.user_other_service_income">User other service income</span>
+              <input name="user_other_service_income" type="text" inputmode="numeric" class="js-number" data-number-kind="amount" value="{{ defaults.user_other_service_income if defaults.user_other_service_income is defined else 0 }}">
+            </label>
+
+            <label class="field">
               <span id="spouse-external-salary-label" data-i18n="field.spouse_external_salary">Spouse salary from other employer</span>
               <input name="spouse_external_salary" type="text" inputmode="numeric" class="js-number" data-number-kind="amount" value="{{ defaults.spouse_external_salary }}">
             </label>
@@ -96,6 +111,7 @@
             <label class="field">
               <span data-i18n="field.opening_retained_earnings">Opening retained earnings available for dividends</span>
               <input name="opening_retained_earnings" type="text" inputmode="numeric" class="js-number" data-number-kind="amount" value="{{ defaults.opening_retained_earnings }}">
+              <small data-i18n="field.opening_retained_earnings_hint">Use the distributable retained earnings from the latest adopted accounts. Current-year profit is entered separately above.</small>
             </label>
 
             <label class="field">
@@ -105,6 +121,30 @@
                 <small>%</small>
               </div>
             </label>
+          </div>
+
+          <div class="subsection">
+            <div class="section-header">
+              <h3 data-i18n="compensation.title">Compensation adjustments</h3>
+              <p data-i18n="compensation.subtitle">Benefit value, pension, and periodization fund are modeled on top of the selected cash salary.</p>
+            </div>
+            <div class="field-grid">
+              <label class="field">
+                <span id="user-car-benefit-label" data-i18n="field.user_car_benefit">Annual car benefit value for the user</span>
+                <input name="user_car_benefit" type="text" inputmode="numeric" class="js-number" data-number-kind="amount" value="{{ defaults.user_car_benefit if defaults.user_car_benefit is defined else 0 }}">
+              </label>
+
+              <label class="field">
+                <span id="planned-user-pension-label" data-i18n="field.planned_user_pension">Planned occupational pension for the user</span>
+                <input name="planned_user_pension" type="text" inputmode="numeric" class="js-number" data-number-kind="amount" value="{{ defaults.planned_user_pension if defaults.planned_user_pension is defined else 0 }}">
+              </label>
+
+              <label class="field field-span-2">
+                <span data-i18n="field.periodization_fund_change">Planned periodization fund allocation (+) or reversal (-)</span>
+                <input name="periodization_fund_change" type="text" inputmode="decimal" class="js-number" data-number-kind="signed-amount" value="{{ defaults.periodization_fund_change if defaults.periodization_fund_change is defined else 0 }}">
+                <small data-i18n="field.periodization_fund_change_hint">Positive amounts reduce the current taxable profit. Negative amounts mean reversal from an existing periodization fund balance.</small>
+              </label>
+            </div>
           </div>
 
           <div class="subsection">

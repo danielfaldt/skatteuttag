@@ -1,4 +1,10 @@
-from app.calculator.planner import PlanningInput, build_ownership_analysis, compute_dividend_spaces, plan_compensation
+from app.calculator.planner import (
+    PlanningInput,
+    build_ownership_analysis,
+    compute_company_budget,
+    compute_dividend_spaces,
+    plan_compensation,
+)
 
 
 def test_2025_dividend_space_uses_old_rules():
@@ -63,3 +69,36 @@ def test_build_ownership_analysis_can_suggest_better_ownership_split():
     assert suggestion is not None
     assert suggestion["estimated_tax_saving"] > 0
     assert suggestion["suggested_user_share_percentage"] != 50
+
+
+def test_company_budget_applies_car_benefit_pension_and_periodization():
+    data = PlanningInput(
+        year=2026,
+        user_birth_year=1985,
+        company_result_before_corporate_tax=1_600_000,
+        planned_user_pension=120_000,
+        periodization_fund_change=100_000,
+        user_car_benefit=60_000,
+    )
+    budget = compute_company_budget(data, planned_salary=700_000)
+
+    assert budget["valid"] is True
+    assert budget["employer_contributions"] > 0
+    assert budget["pension_special_payroll_tax"] == 29_112
+    assert budget["taxable_profit"] < budget["profit_before_periodization"]
+
+
+def test_plan_compensation_uses_other_service_income_and_car_benefit_without_counting_benefit_as_cash():
+    result = plan_compensation(
+        PlanningInput(
+            year=2026,
+            user_other_service_income=180_000,
+            user_car_benefit=72_000,
+            spouse_birth_year=1959,
+        ).model_dump(),
+        include_ownership_analysis=False,
+    )
+
+    assert result["recommended"]["salary_tax"]["total_income"] >= result["recommended"]["salary"] + 72_000
+    assert result["recommended"]["user_net_cash_salary"] < result["recommended"]["salary"]
+    assert result["recommended"]["incremental_user_salary_tax"] > 0

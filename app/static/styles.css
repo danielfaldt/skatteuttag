@@ -156,6 +156,11 @@ body {
   align-items: flex-end;
 }
 
+.field small {
+  color: var(--muted);
+  line-height: 1.45;
+}
+
 input,
 select,
 button {
