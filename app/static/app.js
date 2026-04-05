@@ -11,9 +11,12 @@ const alternativesBox = document.querySelector("#alternatives");
 const assumptionsBox = document.querySelector("#assumptions");
 const resetButton = document.querySelector("#reset-values");
 const metaDescription = document.querySelector("#meta-description");
+const pageTitle = document.querySelector("#page-title");
+const appNameElement = document.querySelector("#app-name");
 
 const TRANSLATIONS = {
   sv: {
+    "brand.app_name": "Skatteuttag",
     "meta.description": "Löne- och utdelningsplanering för ett svenskt aktiebolag med tydlig årskopplad skattelogik.",
     "language.label": "Språk",
     "hero.eyebrow": "Svensk skatteplanering för ägarledda bolag",
@@ -121,6 +124,7 @@ const TRANSLATIONS = {
     "explanation.recommendation_scoring": "Rekommendationen minimerar först avståndet till användarens nettomål och föredrar därefter lägre total skatt."
   },
   en: {
+    "brand.app_name": "TaxSplit",
     "meta.description": "Salary and dividend planning for a Swedish limited company with transparent year-based tax logic.",
     "language.label": "Language",
     "hero.eyebrow": "Swedish tax planning for owner-managed companies",
@@ -263,6 +267,8 @@ function applyStaticTranslations() {
     element.textContent = t(element.dataset.i18n, params);
   });
   metaDescription.setAttribute("content", t("meta.description"));
+  pageTitle.textContent = t("brand.app_name");
+  appNameElement.textContent = t("brand.app_name");
 }
 
 function formToObject() {
