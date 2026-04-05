@@ -16,6 +16,8 @@ def test_index_renders():
     assert 'name="spouse_display_name"' in response.text
     assert 'name="user_birth_year"' in response.text
     assert 'name="spouse_birth_year"' in response.text
+    assert 'name="user_birth_year" type="number"' in response.text
+    assert 'name="spouse_birth_year" type="number"' in response.text
     assert 'name="user_other_service_income"' in response.text
     assert 'name="planned_user_pension"' in response.text
     assert 'name="periodization_fund_change"' in response.text
@@ -54,3 +56,5 @@ def test_client_script_persists_form_state_on_input():
     assert "ownerSpecificText" in body
     assert "/api/ownership-analysis" in body
     assert "signed-amount" in body
+    assert "field.user_birth_year" in body
+    assert "field.spouse_birth_year" in body

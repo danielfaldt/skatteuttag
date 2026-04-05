@@ -394,7 +394,7 @@ function parseLocaleNumber(value, kind = "amount") {
     return 0;
   }
 
-  if (kind === "amount" || kind === "year") {
+  if (kind === "amount") {
     const parsed = Number(raw.replace(/[,.]/g, ""));
     return Number.isFinite(parsed) ? parsed : 0;
   }
@@ -423,12 +423,6 @@ function formatInputValue(value, kind = "amount") {
     return new Intl.NumberFormat(currentLanguage === "sv" ? "sv-SE" : "en-US", {
       minimumFractionDigits: 0,
       maximumFractionDigits: 2,
-    }).format(number);
-  }
-  if (kind === "year") {
-    return new Intl.NumberFormat(currentLanguage === "sv" ? "sv-SE" : "en-US", {
-      maximumFractionDigits: 0,
-      useGrouping: false,
     }).format(number);
   }
   return new Intl.NumberFormat(currentLanguage === "sv" ? "sv-SE" : "en-US", {

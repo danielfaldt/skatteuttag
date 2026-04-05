@@ -68,13 +68,13 @@
             </label>
 
             <label class="field">
-              <span data-i18n="field.user_birth_year">User birth year</span>
-              <input name="user_birth_year" type="text" inputmode="numeric" class="js-number" data-number-kind="year" value="{{ defaults.user_birth_year if defaults.user_birth_year is defined else 1985 }}">
+              <span data-i18n="field.user_birth_year">Användarens födelseår</span>
+              <input name="user_birth_year" type="number" inputmode="numeric" min="1900" max="2010" step="1" value="{{ defaults.user_birth_year if defaults.user_birth_year is defined else 1985 }}">
             </label>
 
             <label class="field">
-              <span data-i18n="field.spouse_birth_year">Spouse birth year</span>
-              <input name="spouse_birth_year" type="text" inputmode="numeric" class="js-number" data-number-kind="year" value="{{ defaults.spouse_birth_year if defaults.spouse_birth_year is defined else 1985 }}">
+              <span data-i18n="field.spouse_birth_year">Makes/makas födelseår</span>
+              <input name="spouse_birth_year" type="number" inputmode="numeric" min="1900" max="2010" step="1" value="{{ defaults.spouse_birth_year if defaults.spouse_birth_year is defined else 1985 }}">
             </label>
           </div>
 
