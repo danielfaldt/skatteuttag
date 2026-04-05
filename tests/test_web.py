@@ -21,6 +21,14 @@ def test_api_calculate_returns_json():
     assert response.status_code == 200
     payload = response.json()
     assert payload["recommended"]["salary"] >= 0
+    assert payload["ownership_suggestion"] is None
+
+
+def test_api_ownership_analysis_returns_json():
+    response = client.post("/api/ownership-analysis", json={"year": 2026})
+    assert response.status_code == 200
+    payload = response.json()
+    assert "ownership_suggestion" in payload
 
 
 def test_security_and_sitemap_exist():
@@ -38,3 +46,4 @@ def test_client_script_persists_form_state_on_input():
     assert 'name="user_share_percentage"' in client.get("/").text
     assert "syncOwnershipDisplay" in body
     assert "ownerSpecificText" in body
+    assert "/api/ownership-analysis" in body

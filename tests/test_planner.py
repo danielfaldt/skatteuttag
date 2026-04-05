@@ -1,4 +1,4 @@
-from app.calculator.planner import PlanningInput, compute_dividend_spaces, plan_compensation
+from app.calculator.planner import PlanningInput, build_ownership_analysis, compute_dividend_spaces, plan_compensation
 
 
 def test_2025_dividend_space_uses_old_rules():
@@ -36,13 +36,14 @@ def test_plan_compensation_returns_recommendation_and_alternatives():
 
 
 def test_plan_compensation_returns_share_percentages():
-    result = plan_compensation(PlanningInput(user_share_percentage=70).model_dump())
+    result = plan_compensation(PlanningInput(user_share_percentage=70).model_dump(), include_ownership_analysis=False)
     assert result["recommended"]["user_share_percentage"] == 70
     assert result["recommended"]["spouse_share_percentage"] == 30
+    assert result["ownership_suggestion"] is None
 
 
-def test_plan_compensation_can_suggest_better_ownership_split():
-    result = plan_compensation(
+def test_build_ownership_analysis_can_suggest_better_ownership_split():
+    result = build_ownership_analysis(
         PlanningInput(
             year=2026,
             user_share_percentage=50,

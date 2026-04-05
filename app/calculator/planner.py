@@ -511,13 +511,18 @@ def suggest_ownership_split(data: PlanningInput) -> dict[str, Any] | None:
     }
 
 
-def plan_compensation(payload: dict[str, Any]) -> dict[str, Any]:
+def build_ownership_analysis(payload: dict[str, Any]) -> dict[str, Any]:
+    data = PlanningInput.model_validate(payload)
+    return {"ownership_suggestion": suggest_ownership_split(data)}
+
+
+def plan_compensation(payload: dict[str, Any], *, include_ownership_analysis: bool = True) -> dict[str, Any]:
     data = PlanningInput.model_validate(payload)
     planned = plan_core(data)
     recommended = planned["recommended"]
     alternatives = planned["alternatives"]
     salary_basis_year = DIVIDEND_RULES[data.year].salary_basis_year
-    ownership_suggestion = suggest_ownership_split(data)
+    ownership_suggestion = suggest_ownership_split(data) if include_ownership_analysis else None
 
     return {
         "input": data.model_dump(),

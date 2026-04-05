@@ -7,7 +7,7 @@ from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse, Res
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-from .calculator.planner import PlanningInput, plan_compensation
+from .calculator.planner import PlanningInput, build_ownership_analysis, plan_compensation
 from .calculator.rules import SUPPORTED_YEARS
 from .config import settings
 
@@ -38,7 +38,17 @@ def index(request: Request) -> HTMLResponse:
 async def calculate(request: Request) -> JSONResponse:
     payload = await request.json()
     try:
-        result = plan_compensation(payload)
+        result = plan_compensation(payload, include_ownership_analysis=False)
+    except Exception as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return JSONResponse(result)
+
+
+@app.post("/api/ownership-analysis")
+async def ownership_analysis(request: Request) -> JSONResponse:
+    payload = await request.json()
+    try:
+        result = build_ownership_analysis(payload)
     except Exception as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     return JSONResponse(result)

@@ -10,6 +10,7 @@ const breakdownGrid = document.querySelector("#breakdown-grid");
 const alternativesBox = document.querySelector("#alternatives");
 const assumptionsBox = document.querySelector("#assumptions");
 const resetButton = document.querySelector("#reset-values");
+const submitButton = form.querySelector('button[type="submit"]');
 const metaDescription = document.querySelector("#meta-description");
 const pageTitle = document.querySelector("#page-title");
 const appNameElement = document.querySelector("#app-name");
@@ -134,7 +135,10 @@ const TRANSLATIONS = {
     "ownership.tax_saving": "Beräknad minskning av total skatt: {taxSaving}.",
     "ownership.no_better_split": "Ingen bättre ägarfördelning hittades inom modellens sökyta.",
     "ownership.no_better_split_detail": "Nuvarande fördelning ser redan skatteeffektiv ut givet inmatningen och de antaganden som används här.",
+    "ownership.loading": "Analyserar om en annan ägarfördelning kan ge lägre total skatt.",
     "error.calculation_failed": "Beräkningen misslyckades.",
+    "status.calculating": "Beräknar rekommendation...",
+    "button.calculating": "Beräknar...",
     "rule.main": "Huvudregeln",
     "rule.simplification": "Förenklingsregeln",
     "rule.new_combined": "2026 års kombinerade regel",
@@ -261,7 +265,10 @@ const TRANSLATIONS = {
     "ownership.tax_saving": "Estimated total-tax reduction: {taxSaving}.",
     "ownership.no_better_split": "No better ownership split was found within the model search space.",
     "ownership.no_better_split_detail": "The current split already looks tax-efficient given the inputs and assumptions used here.",
+    "ownership.loading": "Analyzing whether a different ownership split can reduce total tax.",
     "error.calculation_failed": "Calculation failed.",
+    "status.calculating": "Calculating recommendation...",
+    "button.calculating": "Calculating...",
     "rule.main": "Main rule",
     "rule.simplification": "Simplification rule",
     "rule.new_combined": "2026 combined rule",
@@ -658,14 +665,32 @@ function clearError() {
   errorBox.classList.add("hidden");
 }
 
-async function submitForm() {
-  clearError();
-  saveState();
+function setLoadingState() {
+  summaryBox.classList.add("empty-state");
+  summaryBox.innerHTML = `<span>${t("status.calculating")}</span>`;
+  ownershipSuggestionBox.innerHTML = `
+    <div class="note">
+      <strong>${t("ownership.title")}</strong><br>
+      ${t("ownership.loading")}
+    </div>
+  `;
+  breakdownGrid.innerHTML = "";
+  alternativesBox.innerHTML = "";
+  assumptionsBox.innerHTML = "";
+  submitButton.disabled = true;
+  submitButton.textContent = t("button.calculating");
+}
 
-  const response = await fetch("/api/calculate", {
+function clearLoadingState() {
+  submitButton.disabled = false;
+  submitButton.textContent = t("button.calculate");
+}
+
+async function fetchOwnershipAnalysis(payload) {
+  const response = await fetch("/api/ownership-analysis", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(formToObject()),
+    body: JSON.stringify(payload),
   });
 
   if (!response.ok) {
@@ -673,13 +698,41 @@ async function submitForm() {
     throw new Error(error.detail || t("error.calculation_failed"));
   }
 
+  return response.json();
+}
+
+async function submitForm() {
+  clearError();
+  saveState();
+  setLoadingState();
+  const payload = formToObject();
+
+  const response = await fetch("/api/calculate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    clearLoadingState();
+    throw new Error(error.detail || t("error.calculation_failed"));
+  }
+
   const result = await response.json();
   lastResult = result;
   renderMetrics(result);
-  renderOwnershipSuggestion(result);
   renderBreakdown(result);
   renderAlternatives(result);
   renderAssumptions(result);
+
+  try {
+    const ownershipResult = await fetchOwnershipAnalysis(payload);
+    lastResult = { ...result, ownership_suggestion: ownershipResult.ownership_suggestion };
+    renderOwnershipSuggestion(lastResult);
+  } finally {
+    clearLoadingState();
+  }
 }
 
 yearInput.addEventListener("change", (event) => {
