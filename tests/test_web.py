@@ -12,6 +12,7 @@ def test_index_renders():
     assert "Skatteuttag" in response.text
     assert 'id="language-switch"' in response.text
     assert 'id="export-pdf"' in response.text
+    assert 'data-i18n="button.export_pdf"' in response.text
     assert 'id="user-share-slider"' in response.text
     assert 'name="user_display_name"' in response.text
     assert 'name="spouse_display_name"' in response.text
