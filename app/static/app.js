@@ -23,7 +23,7 @@ const TRANSLATIONS = {
     "hero.lede": "Planera lön och utdelning i ett svenskt aktiebolag med ett valt planeringsår. Appen förklarar hur utbetalningsåret och lönebasåret hänger ihop.",
     "hero.supported_years": "Stödda år: {years}",
     "hero.ownership": "50/50 ägande mellan makar",
-    "hero.persistence": "Lokal sparning i webbläsaren",
+    "hero.persistence": "Sparas lokalt i webbläsaren",
     "inputs.title": "Inmatning",
     "inputs.subtitle": "Alla belopp anges som årsbelopp i SEK.",
     "field.planning_year": "Planeringsår",
