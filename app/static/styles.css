@@ -161,7 +161,7 @@ body {
 .field {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 6px;
   position: relative;
 }
 
@@ -174,9 +174,9 @@ body {
   font-size: 0.92rem;
   font-weight: 600;
   line-height: 1.2;
-  min-height: 3.9em;
+  min-height: 2.5em;
   display: flex;
-  align-items: flex-start;
+  align-items: flex-end;
 }
 
 .field small {
