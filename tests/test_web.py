@@ -11,6 +11,7 @@ def test_index_renders():
     assert response.status_code == 200
     assert "Skatteuttag" in response.text
     assert 'id="language-switch"' in response.text
+    assert 'id="action-menu"' in response.text
     assert 'id="export-data"' in response.text
     assert 'id="import-data"' in response.text
     assert 'id="import-data-file"' in response.text
@@ -40,6 +41,7 @@ def test_index_renders():
     assert 'id="include-church-fee"' in response.text
     assert 'id="tax-parish"' in response.text
     assert 'id="municipal-tax-rate"' in response.text
+    assert 'id="local-tax-summary"' in response.text
     assert 'id="burial-fee-rate"' in response.text
     assert 'id="church-fee-rate"' in response.text
     assert 'class="info-popover"' in response.text
@@ -139,11 +141,15 @@ def test_client_script_persists_form_state_on_input():
     assert "include-church-fee" in body
     assert "municipalTaxManualOverride" in body
     assert "syncLocalTaxComponentInputs" in body
+    assert "renderLocalTaxSummary" in body
+    assert "field.local_tax_total" in body
+    assert "field.local_tax_detail_church" in body
     assert "burial-fee-rate" in client.get("/").text
     assert "church-fee-rate" in client.get("/").text
     assert 'ownerSpecificText("birth_year", "user")' in body
     assert 'document.addEventListener("click"' in body
     assert "/api/export-pdf" in body
+    assert "button.actions" in body
     assert "button.export_pdf" in body
     assert "evaluateArithmeticExpression" in body
     assert "positionInfoPopover" in body
@@ -153,6 +159,7 @@ def test_client_script_persists_form_state_on_input():
     assert "importDataFile" in body
     assert "downloadJsonFile" in body
     assert 'id="export-data"' in client.get("/").text
+    assert "actionMenu" in body
 
 
 def test_client_script_supports_portable_data_export_and_import():
@@ -176,6 +183,7 @@ def test_client_script_supports_portable_data_export_and_import():
     assert 'importDataButton.addEventListener("click"' in body
     assert 'importDataFileInput.addEventListener("change"' in body
     assert 'exportDataButton.addEventListener("click"' in body
+    assert "actionMenu.open = false" in body
 
 
 def test_styles_include_popover_positioning_rules():
@@ -192,3 +200,5 @@ def test_styles_include_hidden_input_and_compact_checkbox_layout():
     body = response.text
     assert ".visually-hidden" in body
     assert ".checkbox-row-compact" in body
+    assert ".action-menu" in body
+    assert ".tax-summary" in body

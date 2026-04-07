@@ -4,6 +4,7 @@ const LANGUAGE_KEY = "skatteuttag-language";
 const form = document.querySelector("#planner-form");
 const yearInput = document.querySelector("#year");
 const languageSwitch = document.querySelector("#language-switch");
+const actionMenu = document.querySelector("#action-menu");
 const exportDataButton = document.querySelector("#export-data");
 const importDataButton = document.querySelector("#import-data");
 const importDataFileInput = document.querySelector("#import-data-file");
@@ -39,6 +40,7 @@ const includeChurchFeeInput = document.querySelector("#include-church-fee");
 const municipalTaxRateInput = document.querySelector("#municipal-tax-rate");
 const burialFeeRateInput = document.querySelector("#burial-fee-rate");
 const churchFeeRateInput = document.querySelector("#church-fee-rate");
+const localTaxSummary = document.querySelector("#local-tax-summary");
 const userShareLabel = document.querySelector("#user-share-label");
 const spouseShareLabel = document.querySelector("#spouse-share-label");
 const userShareDisplay = document.querySelector("#user-share-display");
@@ -58,6 +60,7 @@ const TRANSLATIONS = {
     "brand.app_name": "Skatteuttag",
     "meta.description": "Löne- och utdelningsplanering för ett svenskt aktiebolag med tydlig årskopplad skattelogik.",
     "language.label": "Språk",
+    "button.actions": "Åtgärder",
     "button.export_pdf": "Exportera till pdf",
     "button.export_data": "Exportera data",
     "button.import_data": "Importera data",
@@ -92,6 +95,9 @@ const TRANSLATIONS = {
     "field.include_church_fee": "Medlem i Svenska kyrkan",
     "field.include_church_fee_hint": "Ta med kyrkoavgift",
     "field.municipal_tax_rate": "Kommunalskatt",
+    "field.local_tax_total": "Total lokal skatt i modellen",
+    "field.local_tax_detail_base": "Kommunal/regional skatt + begravningsavgift",
+    "field.local_tax_detail_church": "Kommunal/regional skatt + begravningsavgift + kyrkoavgift",
     "field.tax_option_placeholder": "Välj kommun",
     "field.parish_option_placeholder": "Välj församling",
     "salary_basis.title": "Lönebasår för utdelningsutrymme",
@@ -331,6 +337,7 @@ const TRANSLATIONS = {
     "brand.app_name": "TaxSplit",
     "meta.description": "Salary and dividend planning for a Swedish limited company with transparent year-based tax logic.",
     "language.label": "Language",
+    "button.actions": "Actions",
     "button.export_pdf": "Export PDF",
     "button.export_data": "Export data",
     "button.import_data": "Import data",
@@ -365,6 +372,9 @@ const TRANSLATIONS = {
     "field.include_church_fee": "Member of the Church of Sweden",
     "field.include_church_fee_hint": "Include church fee",
     "field.municipal_tax_rate": "Municipal tax rate",
+    "field.local_tax_total": "Total local tax in the model",
+    "field.local_tax_detail_base": "Municipal/regional income tax + burial fee",
+    "field.local_tax_detail_church": "Municipal/regional income tax + burial fee + church fee",
     "field.tax_option_placeholder": "Select municipality",
     "field.parish_option_placeholder": "Select parish",
     "salary_basis.title": "Salary-base year for dividend room",
@@ -1077,6 +1087,7 @@ function syncLocalTaxComponentInputs() {
   if (!municipality) {
     burialFeeRateInput.value = formatInputValue(yearDefaults.burialFeeRate, "percent");
     churchFeeRateInput.value = formatInputValue(0, "percent");
+    renderLocalTaxSummary();
     return;
   }
 
@@ -1084,6 +1095,32 @@ function syncLocalTaxComponentInputs() {
   const parish = findSelectedParish();
   const churchFee = includeChurchFeeInput.checked && parish ? parish.church_fee || 0 : 0;
   churchFeeRateInput.value = formatInputValue(churchFee, "percent");
+  renderLocalTaxSummary();
+}
+
+function renderLocalTaxSummary() {
+  const incomeTax = parseLocaleNumber(municipalTaxRateInput.value, "percent");
+  const burialFee = parseLocaleNumber(burialFeeRateInput.value, "percent");
+  const churchFee = parseLocaleNumber(churchFeeRateInput.value, "percent");
+  const totalLocalTax = incomeTax + burialFee + churchFee;
+  const parts = [
+    `${formatInputValue(incomeTax, "percent")} %`,
+    `${formatInputValue(burialFee, "percent")} %`,
+  ];
+
+  if (churchFee > 0.0001) {
+    parts.push(`${formatInputValue(churchFee, "percent")} %`);
+  }
+
+  const detailKey = churchFee > 0.0001
+    ? "field.local_tax_detail_church"
+    : "field.local_tax_detail_base";
+
+  localTaxSummary.innerHTML = `
+    <div class="tax-summary-label">${t("field.local_tax_total")}</div>
+    <div class="tax-summary-value">${formatInputValue(totalLocalTax, "percent")} %</div>
+    <div class="tax-summary-detail">${t(detailKey)}: ${parts.join(" + ")}</div>
+  `;
 }
 
 function applyMunicipalTaxAutofill({ force = false } = {}) {
@@ -1749,6 +1786,9 @@ async function exportPdf() {
   } finally {
     exportPdfButton.disabled = false;
     exportPdfButton.textContent = t("button.export_pdf");
+    if (actionMenu) {
+      actionMenu.open = false;
+    }
   }
 }
 
@@ -1763,6 +1803,9 @@ function exportData() {
   } finally {
     exportDataButton.disabled = false;
     exportDataButton.textContent = t("button.export_data");
+    if (actionMenu) {
+      actionMenu.open = false;
+    }
   }
 }
 
@@ -1796,6 +1839,9 @@ async function importDataFile(file) {
     importDataButton.disabled = false;
     importDataButton.textContent = t("button.import_data");
     importDataFileInput.value = "";
+    if (actionMenu) {
+      actionMenu.open = false;
+    }
   }
 }
 
@@ -1894,6 +1940,7 @@ municipalTaxRateInput.addEventListener("input", () => {
   if (!applyingMunicipalTaxRate) {
     municipalTaxManualOverride = true;
   }
+  renderLocalTaxSummary();
 });
 
 taxMunicipalitySelect.addEventListener("change", () => {
@@ -1932,6 +1979,7 @@ languageSwitch.addEventListener("change", (event) => {
   populateTaxParishes(taxParishSelect.value);
   syncParishFieldVisibility();
   refreshFormattedInputs();
+  renderLocalTaxSummary();
   setFieldLabels(yearInput.value);
   if (lastResult) {
     renderMetrics(lastResult);
@@ -1977,6 +2025,9 @@ document.addEventListener("click", (event) => {
       popover.open = false;
     }
   });
+  if (actionMenu?.open && !actionMenu.contains(event.target)) {
+    actionMenu.open = false;
+  }
 });
 
 window.addEventListener("resize", () => {

@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Skatteuttag is a Docker Compose based FastAPI web app for Swedish salary and dividend planning in a two-owner spouse setup with configurable ownership percentages, birth years, salary-linked dividend room, adjustable optimization profiles, optional household-net floor, compensation-mix analysis, car benefit, occupational pension, opening periodization-fund balance, municipality/parish based tax auto-fill, server-generated PDF export, and JSON export/import of scenarios with embedded analysis snapshots.
+Skatteuttag is a Docker Compose based FastAPI web app for Swedish salary and dividend planning in a two-owner spouse setup with configurable ownership percentages, birth years, salary-linked dividend room, adjustable optimization profiles, optional household-net floor, compensation-mix analysis, car benefit, occupational pension, opening periodization-fund balance, municipality/parish based tax auto-fill, a derived total-local-tax display, a compact header actions menu, server-generated PDF export, and JSON export/import of scenarios with embedded analysis snapshots.
 
 ## Scope
 
@@ -39,7 +39,7 @@ docker compose --env-file .env.dev run --rm test
 - `app/calculator/planner.py`: dividend room, scenario evaluation, company budget, pension limits, year-specific local-tax defaults, compensation-mix analysis, ownership analysis, and recommendation selection
 - `app/tax_rates.py`: official Skatteverket municipality/parish tax catalog parsing for `2025` and `2026`
 - `app/templates/index.html`: page shell
-- `app/static/app.js`: client behavior, local storage, and Swedish/English i18n
+- `app/static/app.js`: client behavior, local storage, Swedish/English i18n, actions menu, and derived local-tax summary
 - `app/static/styles.css`: UI styling
 
 ## Conventions

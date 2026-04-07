@@ -23,9 +23,14 @@
           </p>
         </div>
         <div class="hero-note">
-          <button type="button" id="export-data" class="pill pill-button" data-i18n="button.export_data">Exportera data</button>
-          <button type="button" id="import-data" class="pill pill-button" data-i18n="button.import_data">Importera data</button>
-          <button type="button" id="export-pdf" class="pill pill-button" data-i18n="button.export_pdf">Exportera till pdf</button>
+          <details id="action-menu" class="action-menu">
+            <summary class="pill" data-i18n="button.actions">Åtgärder</summary>
+            <div class="action-menu-panel">
+              <button type="button" id="export-data" class="action-menu-item" data-i18n="button.export_data">Exportera data</button>
+              <button type="button" id="import-data" class="action-menu-item" data-i18n="button.import_data">Importera data</button>
+              <button type="button" id="export-pdf" class="action-menu-item" data-i18n="button.export_pdf">Exportera till pdf</button>
+            </div>
+          </details>
           <input id="import-data-file" type="file" accept="application/json,.json" class="visually-hidden">
           <label class="language-switch pill">
             <span data-i18n="language.label">Language</span>
@@ -234,6 +239,7 @@
                   <input name="municipal_tax_rate" id="municipal-tax-rate" type="text" inputmode="decimal" class="js-number" data-number-kind="percent" value="{{ defaults.municipal_tax_rate }}">
                   <small>%</small>
                 </div>
+                <div id="local-tax-summary" class="tax-summary" aria-live="polite"></div>
                 <input name="burial_fee_rate" id="burial-fee-rate" type="hidden" class="js-number" data-number-kind="percent" value="{{ defaults.burial_fee_rate if defaults.burial_fee_rate is defined else 0.292 }}">
                 <input name="church_fee_rate" id="church-fee-rate" type="hidden" class="js-number" data-number-kind="percent" value="{{ defaults.church_fee_rate if defaults.church_fee_rate is defined else 0 }}">
               </label>
