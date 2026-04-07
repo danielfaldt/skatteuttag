@@ -1,10 +1,11 @@
 # TODO
 
-<!-- next-id: 16 -->
+<!-- next-id: 17 -->
 
 <!-- screenshots: add [ss://...] at end of todo line; multiple separated by ; -->
 
 ## Open
+
 - [ ] T002 · Add separate municipality tax inputs per owner, including burial fee and optional faith-community fee.
 - [ ] T003 · Add explicit Svenska kyrkan membership handling per owner instead of assuming one shared municipal-style rate.
 - [ ] T001 · Add support for planning years beyond `2026` once official constants and K10 rule details are available.
@@ -17,6 +18,7 @@
 - [ ] T010 · Add future production deployment tasks, including Nginx Proxy Manager hostname configuration and production URL wiring.
 - [ ] T011 · Add export and import of planning data as JSON so scenarios can be moved between browsers and archived outside local storage.
 - [ ] T012 · Separate target-fit optimization from tax-minimization in the result view so the app can show both the closest-to-target plan and the lowest-tax plan when they differ materially.
+- [ ] T016 · Implement a function for exporting and importing data in JSON format along with the entire analysis of this functionality.
 
 ## Closed
 
