@@ -1,12 +1,12 @@
 # TODO
 
-<!-- next-id: 17 -->
+<!-- next-id: 16 -->
 
 <!-- screenshots: add [ss://...] at end of todo line; multiple separated by ; -->
 
 ## Open
 
-- [ ] T016 · Förklara hur analysen gjord och vilka parametrar som styrde. Lättbegripligt språk. Ändå tydligt.
+- [ ] T015 · Förklara hur analysen gjord och vilka parametrar som styrde. Lättbegripligt språk. Ändå tydligt. Gör detta för varje analys som görs. Vanlig svenska
 - [ ] T014 · Styrparametrarna ska kunna justeras. Maximalt uttag/minimal skatt, minsta ”löneuttag netto” (inkl utdelning för båda) etc. Finns några begränsningar som slagit i? Typ max vinstuttag eller liknande.
 - [ ] T013 · Ägarfördelning jämförs i bakgrunden -> Även indikerat på "Slutgiltigt förslag" att den inte är färdigbehandlad. Formulera om denna även.
 - [ ] T002 · Add separate municipality tax inputs per owner, including burial fee and optional faith-community fee.
@@ -24,4 +24,3 @@
 
 ## Closed
 
-- [x] T015 · dUmmY
