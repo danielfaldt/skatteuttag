@@ -6,7 +6,7 @@
 
 ## Open
 
-- [ ] T016 · Implement a function for exporting and importing data in JSON format along with the entire analysis of this functionality.
+- [ ] T016 · Implement a function for exporting and importing data in JSON format along with the entire analysis if existing.
 - [ ] T002 · Add separate municipality tax inputs per owner, including burial fee and optional faith-community fee.
 - [ ] T003 · Add explicit Svenska kyrkan membership handling per owner instead of assuming one shared municipal-style rate.
 - [ ] T001 · Add support for planning years beyond `2026` once official constants and K10 rule details are available.
