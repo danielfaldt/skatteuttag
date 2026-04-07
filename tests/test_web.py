@@ -44,6 +44,7 @@ def test_index_renders():
     assert 'id="church-fee-rate"' in response.text
     assert 'class="info-popover"' in response.text
     assert 'data-i18n="info.opening_retained_earnings"' in response.text
+    assert 'class="field-grid base-grid"' in response.text
 
 
 def test_api_calculate_returns_json():
@@ -105,7 +106,10 @@ def test_client_script_persists_form_state_on_input():
     assert "field.user_birth_year" in body
     assert "field.spouse_birth_year" in body
     assert "info.opening_retained_earnings" in body
+    assert "balansräkningen eller i noten/förändringen för eget kapital" in body
+    assert "resultat före skatt eller resultat efter finansiella poster" in body
     assert "info.periodization_fund_change" in body
+    assert "arbetsgivardeklarationer eller bokföringens lönekonton" in body
     assert "ownership.loading_title" in body
     assert "ownership-loading" in body
     assert "ownership.input_label" in body
@@ -151,9 +155,40 @@ def test_client_script_persists_form_state_on_input():
     assert 'id="export-data"' in client.get("/").text
 
 
+def test_client_script_supports_portable_data_export_and_import():
+    response = client.get("/static/app.js")
+    assert response.status_code == 200
+    body = response.text
+
+    assert 'const EXPORT_SCHEMA = "skatteuttag-planning-export";' in body
+    assert "const EXPORT_VERSION = 1;" in body
+    assert '"button.export_data"' in body
+    assert '"button.import_data"' in body
+    assert '"button.exporting_data"' in body
+    assert '"button.importing_data"' in body
+    assert '"error.import_invalid_format"' in body
+    assert "function buildPortableState()" in body
+    assert "function buildExportPayload()" in body
+    assert "analysis: lastResult" in body
+    assert "function applyImportedState(source)" in body
+    assert "function importDataFile(file)" in body
+    assert "parsed?.schema === EXPORT_SCHEMA ? parsed.form : parsed" in body
+    assert 'importDataButton.addEventListener("click"' in body
+    assert 'importDataFileInput.addEventListener("change"' in body
+    assert 'exportDataButton.addEventListener("click"' in body
+
+
 def test_styles_include_popover_positioning_rules():
     response = client.get("/static/styles.css")
     assert response.status_code == 200
     body = response.text
     assert ".info-popover.align-left .info-panel" in body
     assert ".info-popover.open-upward .info-panel" in body
+
+
+def test_styles_include_hidden_input_and_compact_checkbox_layout():
+    response = client.get("/static/styles.css")
+    assert response.status_code == 200
+    body = response.text
+    assert ".visually-hidden" in body
+    assert ".checkbox-row-compact" in body

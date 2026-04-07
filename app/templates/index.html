@@ -174,80 +174,76 @@
                 <span class="section-tag" data-i18n="tag.base_data">Base data</span>
               </div>
             </div>
-            <div class="field-columns">
-              <div class="field-column">
-                <label class="field">
-                  <span id="user-other-salary-income-label" data-i18n="field.user_other_salary_income">User other salary income outside the company</span>
-                  <input name="user_other_salary_income" type="text" inputmode="numeric" class="js-number" data-number-kind="amount" value="{{ defaults.user_other_salary_income if defaults.user_other_salary_income is defined else 0 }}">
-                </label>
+            <div class="field-grid base-grid">
+              <label class="field">
+                <span id="user-other-salary-income-label" data-i18n="field.user_other_salary_income">User other salary income outside the company</span>
+                <input name="user_other_salary_income" type="text" inputmode="numeric" class="js-number" data-number-kind="amount" value="{{ defaults.user_other_salary_income if defaults.user_other_salary_income is defined else 0 }}">
+              </label>
 
-                <label class="field">
-                  <div class="label-row">
-                    <span class="label-text" data-i18n="field.company_result_before_corporate_tax">Company result before corporate tax</span>
-                    <details class="info-popover">
-                      <summary aria-label="More info"><span aria-hidden="true">i</span></summary>
-                      <div class="info-panel" data-i18n="info.company_result_before_corporate_tax">This is the company's result before corporate tax, after ordinary business costs. The app then tests different owner salary levels on top of it.</div>
-                    </details>
-                  </div>
-                  <input name="company_result_before_corporate_tax" type="text" inputmode="numeric" class="js-number" data-number-kind="amount" value="{{ defaults.company_result_before_corporate_tax }}">
-                </label>
+              <label class="field">
+                <span id="spouse-external-salary-label" data-i18n="field.spouse_external_salary">Spouse salary from other employer</span>
+                <input name="spouse_external_salary" type="text" inputmode="numeric" class="js-number" data-number-kind="amount" value="{{ defaults.spouse_external_salary }}">
+              </label>
 
-                <label class="field">
-                  <span data-i18n="field.tax_municipality">Municipality for tax auto-fill</span>
-                  <select name="tax_municipality" id="tax-municipality">
-                    <option value="">Select municipality</option>
-                  </select>
-                </label>
+              <label class="field">
+                <div class="label-row">
+                  <span class="label-text" data-i18n="field.company_result_before_corporate_tax">Company result before corporate tax</span>
+                  <details class="info-popover">
+                    <summary aria-label="More info"><span aria-hidden="true">i</span></summary>
+                    <div class="info-panel" data-i18n="info.company_result_before_corporate_tax">This is the company's result before corporate tax, after ordinary business costs. The app then tests different owner salary levels on top of it.</div>
+                  </details>
+                </div>
+                <input name="company_result_before_corporate_tax" type="text" inputmode="numeric" class="js-number" data-number-kind="amount" value="{{ defaults.company_result_before_corporate_tax }}">
+              </label>
 
-                <label class="field" id="tax-parish-field">
-                  <span data-i18n="field.tax_parish">Parish</span>
-                  <select name="tax_parish" id="tax-parish">
-                    <option value="">Select parish</option>
-                  </select>
-                </label>
+              <label class="field">
+                <div class="label-row">
+                  <span class="label-text" data-i18n="field.opening_retained_earnings">Opening retained earnings available for dividends</span>
+                  <details class="info-popover">
+                    <summary aria-label="More info"><span aria-hidden="true">i</span></summary>
+                    <div class="info-panel" data-i18n="info.opening_retained_earnings">This is money from earlier years that can already be distributed according to the latest adopted annual accounts. It is not the same thing as this year's profit.</div>
+                  </details>
+                </div>
+                <input name="opening_retained_earnings" type="text" inputmode="numeric" class="js-number" data-number-kind="amount" value="{{ defaults.opening_retained_earnings }}">
+              </label>
 
-                <label class="field">
-                  <div class="label-row">
-                    <span class="label-text" data-i18n="field.municipal_tax_rate">Municipal tax rate</span>
-                    <details class="info-popover">
-                      <summary aria-label="More info"><span aria-hidden="true">i</span></summary>
-                      <div class="info-panel" data-i18n="info.municipal_tax_rate">The field is auto-filled with municipal and regional income tax from the selected municipality. Burial fee and any church fee are handled separately in the calculation. You can still edit the visible rate manually.</div>
-                    </details>
-                  </div>
-                  <div class="inline-input">
-                    <input name="municipal_tax_rate" id="municipal-tax-rate" type="text" inputmode="decimal" class="js-number" data-number-kind="percent" value="{{ defaults.municipal_tax_rate }}">
-                    <small>%</small>
-                  </div>
-                  <input name="burial_fee_rate" id="burial-fee-rate" type="hidden" class="js-number" data-number-kind="percent" value="{{ defaults.burial_fee_rate if defaults.burial_fee_rate is defined else 0.292 }}">
-                  <input name="church_fee_rate" id="church-fee-rate" type="hidden" class="js-number" data-number-kind="percent" value="{{ defaults.church_fee_rate if defaults.church_fee_rate is defined else 0 }}">
-                </label>
-              </div>
+              <label class="field">
+                <span data-i18n="field.tax_municipality">Municipality for tax auto-fill</span>
+                <select name="tax_municipality" id="tax-municipality">
+                  <option value="">Select municipality</option>
+                </select>
+              </label>
 
-              <div class="field-column">
-                <label class="field">
-                  <span id="spouse-external-salary-label" data-i18n="field.spouse_external_salary">Spouse salary from other employer</span>
-                  <input name="spouse_external_salary" type="text" inputmode="numeric" class="js-number" data-number-kind="amount" value="{{ defaults.spouse_external_salary }}">
-                </label>
+              <label class="field">
+                <span data-i18n="field.include_church_fee">Member of the Church of Sweden</span>
+                <div class="checkbox-row checkbox-row-compact">
+                  <input name="include_church_fee" id="include-church-fee" type="checkbox" {% if defaults.include_church_fee %}checked{% endif %}>
+                  <span data-i18n="field.include_church_fee_hint">Add church fee from the selected parish.</span>
+                </div>
+              </label>
 
-                <label class="field">
-                  <div class="label-row">
-                    <span class="label-text" data-i18n="field.opening_retained_earnings">Opening retained earnings available for dividends</span>
-                    <details class="info-popover">
-                      <summary aria-label="More info"><span aria-hidden="true">i</span></summary>
-                      <div class="info-panel" data-i18n="info.opening_retained_earnings">This is money from earlier years that can already be distributed according to the latest adopted annual accounts. It is not the same thing as this year's profit.</div>
-                    </details>
-                  </div>
-                  <input name="opening_retained_earnings" type="text" inputmode="numeric" class="js-number" data-number-kind="amount" value="{{ defaults.opening_retained_earnings }}">
-                </label>
+              <label class="field">
+                <div class="label-row">
+                  <span class="label-text" data-i18n="field.municipal_tax_rate">Municipal tax rate</span>
+                  <details class="info-popover">
+                    <summary aria-label="More info"><span aria-hidden="true">i</span></summary>
+                    <div class="info-panel" data-i18n="info.municipal_tax_rate">The field is auto-filled with municipal and regional income tax from the selected municipality. Burial fee and any church fee are handled separately in the calculation. You can still edit the visible rate manually.</div>
+                  </details>
+                </div>
+                <div class="inline-input">
+                  <input name="municipal_tax_rate" id="municipal-tax-rate" type="text" inputmode="decimal" class="js-number" data-number-kind="percent" value="{{ defaults.municipal_tax_rate }}">
+                  <small>%</small>
+                </div>
+                <input name="burial_fee_rate" id="burial-fee-rate" type="hidden" class="js-number" data-number-kind="percent" value="{{ defaults.burial_fee_rate if defaults.burial_fee_rate is defined else 0.292 }}">
+                <input name="church_fee_rate" id="church-fee-rate" type="hidden" class="js-number" data-number-kind="percent" value="{{ defaults.church_fee_rate if defaults.church_fee_rate is defined else 0 }}">
+              </label>
 
-                <label class="field">
-                  <span data-i18n="field.include_church_fee">Member of the Church of Sweden</span>
-                  <div class="checkbox-row checkbox-row-compact">
-                    <input name="include_church_fee" id="include-church-fee" type="checkbox" {% if defaults.include_church_fee %}checked{% endif %}>
-                    <span data-i18n="field.include_church_fee_hint">Add church fee from the selected parish.</span>
-                  </div>
-                </label>
-              </div>
+              <label class="field" id="tax-parish-field">
+                <span data-i18n="field.tax_parish">Parish</span>
+                <select name="tax_parish" id="tax-parish">
+                  <option value="">Select parish</option>
+                </select>
+              </label>
             </div>
           </div>
 

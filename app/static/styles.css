@@ -220,6 +220,11 @@ body {
   gap: 30px 16px;
 }
 
+.base-grid {
+  gap: 26px 24px;
+  align-items: start;
+}
+
 .field {
   display: flex;
   flex-direction: column;
