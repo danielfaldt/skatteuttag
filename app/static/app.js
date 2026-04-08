@@ -155,6 +155,8 @@ const TRANSLATIONS = {
     "annual_report.field_source": "{fieldLabel}: {value} från {sourceLabel} på sida {page}.",
     "annual_report.field_source_no_page": "{fieldLabel}: {value} från {sourceLabel}.",
     "annual_report.warning_prefix": "Obs:",
+    "annual_report.loading_title": "Läser in årsredovisning",
+    "annual_report.loading_detail": "PDF:n tolkas nu och relevanta fält fylls i så snart importen är klar.",
     "recommended.title": "Rekommenderad plan",
     "recommended.subtitle": "Närmast målet, därefter prioritet på lägre total skatt.",
     "recommended.subtitle_target_then_tax": "Optimerad för att komma nära användarens mål, därefter lägre total skatt.",
@@ -458,6 +460,8 @@ const TRANSLATIONS = {
     "annual_report.field_source": "{fieldLabel}: {value} from {sourceLabel} on page {page}.",
     "annual_report.field_source_no_page": "{fieldLabel}: {value} from {sourceLabel}.",
     "annual_report.warning_prefix": "Note:",
+    "annual_report.loading_title": "Reading annual report",
+    "annual_report.loading_detail": "The PDF is being parsed and matching fields will be filled in as soon as the import finishes.",
     "recommended.title": "Recommended plan",
     "recommended.subtitle": "Closest to the target, then biased toward lower total tax.",
     "recommended.subtitle_target_then_tax": "Optimized to stay close to the user's target, then toward lower total tax.",
@@ -679,6 +683,7 @@ let taxCatalog = new Map();
 let municipalTaxManualOverride = false;
 let applyingMunicipalTaxRate = false;
 let annualReportImportState = null;
+let annualReportImportPending = false;
 
 function formatCurrency(value) {
   return new Intl.NumberFormat(currentLanguage === "sv" ? "sv-SE" : "en-US", {
@@ -1137,6 +1142,20 @@ function renderAnnualReportStatus() {
     return;
   }
 
+  if (annualReportImportPending) {
+    annualReportStatusBox.innerHTML = `
+      <div class="note annual-report-loading">
+        <div class="loading-header">
+          <span class="loading-spinner" aria-hidden="true"></span>
+          <strong>${t("annual_report.loading_title")}</strong>
+        </div>
+        <div class="loading-detail">${t("annual_report.loading_detail")}</div>
+      </div>
+    `;
+    annualReportStatusBox.classList.remove("hidden");
+    return;
+  }
+
   if (!annualReportImportState?.fields || Object.keys(annualReportImportState.fields).length === 0) {
     annualReportStatusBox.innerHTML = "";
     annualReportStatusBox.classList.add("hidden");
@@ -1210,6 +1229,8 @@ async function importAnnualReportFile(file) {
   }
 
   clearError();
+  annualReportImportPending = true;
+  renderAnnualReportStatus();
   importAnnualReportButton.disabled = true;
   importAnnualReportButton.textContent = t("button.importing_annual_report");
 
@@ -1233,6 +1254,8 @@ async function importAnnualReportFile(file) {
   } catch (error) {
     throw new Error(error.message || t("error.annual_report_invalid_format"));
   } finally {
+    annualReportImportPending = false;
+    renderAnnualReportStatus();
     importAnnualReportButton.disabled = false;
     importAnnualReportButton.textContent = t("button.import_annual_report");
     importAnnualReportFileInput.value = "";

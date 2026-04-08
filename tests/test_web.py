@@ -187,6 +187,8 @@ def test_client_script_persists_form_state_on_input():
     assert "importAnnualReportFile" in body
     assert "/api/import-annual-report" in body
     assert "annual_report.status_title" in body
+    assert "annual_report.loading_title" in body
+    assert "annualReportImportPending" in body
     assert "field-autofilled" in body
     assert "importDataFile" in body
     assert "downloadJsonFile" in body
@@ -235,6 +237,7 @@ def test_styles_include_hidden_input_and_compact_checkbox_layout():
     assert ".action-menu" in body
     assert ".action-menu-panel" in body
     assert ".annual-report-status" in body
+    assert ".annual-report-loading" in body
     assert ".field.field-autofilled::after" in body
     assert "max-width: calc(100vw - 32px);" in body
     assert "width: min(220px, calc(100vw - 48px));" in body

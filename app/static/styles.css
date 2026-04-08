@@ -698,6 +698,10 @@ button[type="submit"] {
   margin-top: 16px;
 }
 
+.annual-report-loading {
+  border-left: 4px solid var(--accent);
+}
+
 .annual-report-list {
   margin: 12px 0 0;
   padding-left: 18px;
