@@ -207,6 +207,9 @@ def test_styles_include_hidden_input_and_compact_checkbox_layout():
     assert ".visually-hidden" in body
     assert ".checkbox-row-compact" in body
     assert ".action-menu" in body
+    assert ".action-menu-panel" in body
+    assert "max-width: calc(100vw - 32px);" in body
+    assert "width: min(220px, calc(100vw - 48px));" in body
     assert ".tax-summary" in body
     assert ".hero {" in body
     assert "z-index: 4;" in body
