@@ -6,7 +6,6 @@
 
 ## Open
 
-- [ ] T017 · Fix the syntax error in the calculation and clarify any misunderstandings or typos. See attachment. User input error or calc error? Anyhow, the end result is wrong. [ss://skatteuttag/screenshots/img_1876-w8xo8k.jpeg]
 - [ ] T002 · Add separate municipality tax inputs per owner, including burial fee and optional faith-community fee.
 - [ ] T003 · Add explicit Svenska kyrkan membership handling per owner instead of assuming one shared municipal-style rate.
 - [ ] T001 · Add support for planning years beyond `2026` once official constants and K10 rule details are available.
@@ -22,6 +21,7 @@
 ## Closed
 
 - [x] T016 · Implement a function for exporting and importing data in JSON format along with the entire analysis if existing.
+- [x] T017 · Fix the syntax error in the calculation and clarify any misunderstandings or typos. See attachment. User input error or calc error? Anyhow, the end result is wrong. [ss://skatteuttag/screenshots/img_1876-w8xo8k.jpeg]
 - [x] T013 · Ägarfördelning jämförs i bakgrunden -> Även indikerat på "Slutgiltigt förslag" att den inte är färdigbehandlad. Formulera om denna även.
 - [x] T014 · Styrparametrarna ska kunna justeras. Maximalt uttag/minimal skatt, minsta ”löneuttag netto” (inkl utdelning för båda) etc. Finns några begränsningar som slagit i? Typ max vinstuttag eller liknande.
 - [x] T015 · Förklara hur analysen gjord och vilka parametrar som styrde. Lättbegripligt språk. Ändå tydligt. Gör detta för varje analys som görs. Vanlig svenska.

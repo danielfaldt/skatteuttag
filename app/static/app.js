@@ -190,7 +190,7 @@ const TRANSLATIONS = {
     "breakdown.user_salary_tax": "Användarens löneskatt",
     "breakdown.dividend_room": "Utdelningsutrymme",
     "breakdown.dividend_taxation": "Utdelningsbeskattning",
-    "label.profit_before_owner_salary": "Resultat före bolagsskatt",
+    "label.profit_before_owner_salary": "Resultat före ägarlön och bolagsskatt",
     "label.owner_salary": "Ägarlön",
     "label.employer_contributions": "Arbetsgivaravgifter",
     "label.corporate_tax": "Bolagsskatt",
@@ -199,6 +199,7 @@ const TRANSLATIONS = {
     "label.cash_salary": "Kontant lön",
     "label.user_other_salary_income": "Annan lön utanför bolaget",
     "label.car_benefit": "Bilförmån",
+    "label.car_benefit_non_cash": "Bilförmån (ej kontant utbetalning)",
     "label.taxable_company_income": "Skattepliktig ersättning från bolaget",
     "label.base_deduction": "Grundavdrag",
     "label.municipal_tax": "Kommunal skatt",
@@ -281,6 +282,7 @@ const TRANSLATIONS = {
     "analysis.controls_title": "Styrdes av",
     "analysis.constraints_title": "Begränsningar just nu",
     "analysis.recommendation_method": "Appen sökte igenom möjliga kombinationer av lön och utdelning inom bolagets budget och valde sedan bästa scenario enligt vald optimeringsprofil.",
+    "note.company_budget_non_cash": "Bilförmån visas här eftersom den påverkar arbetsgivaravgifter och skatt, men den är inte ett kontant utflöde från bolaget.",
     "analysis.mix_method": "Appen jämförde närliggande scenarier runt huvudförslaget för att visa vad mer lön eller mer utdelning gör med netto och skatt.",
     "analysis.ownership_method": "Appen räknade om huvudförslaget för flera möjliga ägarandelar och jämförde hushållsnetto, total skatt och målträff.",
     "analysis.alternatives_method": "De här scenarierna är nyttiga jämförelsepunkter inom samma bolagsbudget och regelverk som huvudförslaget.",
@@ -467,7 +469,7 @@ const TRANSLATIONS = {
     "breakdown.user_salary_tax": "User salary tax",
     "breakdown.dividend_room": "Dividend room",
     "breakdown.dividend_taxation": "Dividend taxation",
-    "label.profit_before_owner_salary": "Result before corporate tax",
+    "label.profit_before_owner_salary": "Result before owner salary and corporate tax",
     "label.owner_salary": "Owner salary",
     "label.employer_contributions": "Employer contributions",
     "label.corporate_tax": "Corporate tax",
@@ -476,6 +478,7 @@ const TRANSLATIONS = {
     "label.cash_salary": "Cash salary",
     "label.user_other_salary_income": "Other salary outside the company",
     "label.car_benefit": "Car benefit",
+    "label.car_benefit_non_cash": "Car benefit (non-cash benefit)",
     "label.taxable_company_income": "Taxable company compensation",
     "label.base_deduction": "Base deduction",
     "label.municipal_tax": "Municipal tax",
@@ -558,6 +561,7 @@ const TRANSLATIONS = {
     "analysis.controls_title": "Driven by",
     "analysis.constraints_title": "Current limits",
     "analysis.recommendation_method": "The app searched across feasible salary and dividend combinations within the company budget and then selected the best scenario under the chosen optimization profile.",
+    "note.company_budget_non_cash": "Car benefit is shown here because it affects employer contributions and tax, but it is not a cash outflow from the company.",
     "analysis.mix_method": "The app compared nearby scenarios around the main recommendation to show what more salary or more dividend does to net income and tax.",
     "analysis.ownership_method": "The app recalculated the main recommendation for multiple ownership splits and compared household net, total tax, and target fit.",
     "analysis.alternatives_method": "These scenarios are useful comparison points within the same company budget and rule set as the main recommendation.",
@@ -1582,13 +1586,14 @@ function renderOwnershipSuggestion(result) {
   `;
 }
 
-function breakdownCard(title, rows) {
+function breakdownCard(title, rows, note = "") {
   return `
     <article class="breakdown-card">
       <h3>${title}</h3>
       <div class="kv">
         ${rows.map(([key, value]) => `<div>${key}</div><div>${value}</div>`).join("")}
       </div>
+      ${note ? `<p class="breakdown-note">${note}</p>` : ""}
     </article>
   `;
 }
@@ -1605,14 +1610,14 @@ function renderBreakdown(result) {
     breakdownCard(t("breakdown.company_budget"), [
       [t("label.profit_before_owner_salary"), formatCurrency(result.input.company_result_before_corporate_tax)],
       [t("label.cash_salary"), formatCurrency(recommendation.salary)],
-      [t("label.car_benefit"), formatCurrency(company.car_benefit)],
+      [t("label.car_benefit_non_cash"), formatCurrency(company.car_benefit)],
       [t("label.employer_contributions"), formatCurrency(company.employer_contributions)],
       [t("label.pension"), formatCurrency(company.planned_user_pension)],
       [t("label.pension_slp"), formatCurrency(company.pension_special_payroll_tax)],
       [t("label.periodization_fund_change"), formatCurrency(company.periodization_fund_change)],
       [t("label.corporate_tax"), formatCurrency(company.corporate_tax)],
       [t("label.available_dividend_cash"), formatCurrency(company.available_dividend_cash)],
-    ]),
+    ], t("note.company_budget_non_cash")),
     breakdownCard(ownerSpecificText("salary_tax", "user"), [
       [t("label.cash_salary"), formatCurrency(recommendation.salary)],
       [t("label.user_other_salary_income"), formatCurrency(result.input.user_other_salary_income)],

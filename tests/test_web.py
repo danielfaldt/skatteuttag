@@ -128,6 +128,8 @@ def test_client_script_persists_form_state_on_input():
     assert "recommended.final_summary_pending" in body
     assert "problem.user_target_unreachable" in body
     assert "renderProblemSignals" in body
+    assert "label.car_benefit_non_cash" in body
+    assert "note.company_budget_non_cash" in body
     assert "analysis.recommendation_method" in body
     assert "analysis.constraint_user_target" in body
     assert "recommended.subtitle_household_max" in body
