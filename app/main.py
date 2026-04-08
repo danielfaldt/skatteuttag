@@ -2,11 +2,12 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, File, HTTPException, Request, UploadFile
 from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
+from .annual_report import import_annual_report
 from .calculator.planner import PlanningInput, build_ownership_analysis, plan_compensation
 from .calculator.rules import SUPPORTED_YEARS
 from .config import settings
@@ -80,6 +81,18 @@ async def export_pdf(request: Request) -> Response:
         media_type="application/pdf",
         headers={"Content-Disposition": 'attachment; filename="skatteuttag-report.pdf"'},
     )
+
+
+@app.post("/api/import-annual-report")
+async def import_annual_report_route(file: UploadFile = File(...)) -> JSONResponse:
+    if not file.filename or not file.filename.lower().endswith(".pdf"):
+        raise HTTPException(status_code=422, detail="Välj en PDF med årsredovisningen.")
+
+    try:
+        payload = import_annual_report(await file.read(), filename=file.filename)
+    except Exception as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return JSONResponse(payload)
 
 
 @app.get("/health")

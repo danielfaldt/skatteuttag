@@ -5,10 +5,13 @@ const form = document.querySelector("#planner-form");
 const yearInput = document.querySelector("#year");
 const languageSwitch = document.querySelector("#language-switch");
 const actionMenu = document.querySelector("#action-menu");
+const importAnnualReportButton = document.querySelector("#import-annual-report");
+const importAnnualReportFileInput = document.querySelector("#import-annual-report-file");
 const exportDataButton = document.querySelector("#export-data");
 const importDataButton = document.querySelector("#import-data");
 const importDataFileInput = document.querySelector("#import-data-file");
 const exportPdfButton = document.querySelector("#export-pdf");
+const annualReportStatusBox = document.querySelector("#annual-report-status");
 const errorBox = document.querySelector("#error-box");
 const summaryBox = document.querySelector("#recommendation-summary");
 const finalPlanBox = document.querySelector("#final-plan-summary");
@@ -61,9 +64,11 @@ const TRANSLATIONS = {
     "meta.description": "Löne- och utdelningsplanering för ett svenskt aktiebolag med tydlig årskopplad skattelogik.",
     "language.label": "Språk",
     "button.actions": "Åtgärder",
+    "button.import_annual_report": "Läs in årsredovisning",
     "button.export_pdf": "Exportera till pdf",
     "button.export_data": "Exportera data",
     "button.import_data": "Importera data",
+    "button.importing_annual_report": "Läser in årsredovisning...",
     "button.exporting_pdf": "Exporterar PDF...",
     "button.exporting_data": "Exporterar data...",
     "button.importing_data": "Importerar data...",
@@ -142,6 +147,14 @@ const TRANSLATIONS = {
     "button.calculate": "Beräkna rekommendation",
     "button.reset": "Återställ sparade värden",
     "inputs.helper": "Appen sparar formulärvärden i webbläsarens lokala lagring och återställer dem vid omladdning.",
+    "annual_report.badge": "Årsredovisning",
+    "annual_report.status_title": "Inlästa värden från årsredovisning",
+    "annual_report.status_intro": "{count} fält fylldes i automatiskt. Kontrollera dem gärna innan du räknar vidare.",
+    "annual_report.status_report": "Källa: {filename}{meta}.",
+    "annual_report.status_report_meta": " ({companyName}, räkenskapsår {reportYear})",
+    "annual_report.field_source": "{fieldLabel}: {value} från {sourceLabel} på sida {page}.",
+    "annual_report.field_source_no_page": "{fieldLabel}: {value} från {sourceLabel}.",
+    "annual_report.warning_prefix": "Obs:",
     "recommended.title": "Rekommenderad plan",
     "recommended.subtitle": "Närmast målet, därefter prioritet på lägre total skatt.",
     "recommended.subtitle_target_then_tax": "Optimerad för att komma nära användarens mål, därefter lägre total skatt.",
@@ -313,6 +326,8 @@ const TRANSLATIONS = {
     "error.export_failed": "PDF-exporten misslyckades.",
     "error.import_failed": "Importen misslyckades.",
     "error.import_invalid_format": "Filen kunde inte läsas. Välj en giltig export från Skatteuttag.",
+    "error.annual_report_invalid_format": "Filen kunde inte läsas. Välj en giltig PDF med årsredovisningen.",
+    "error.annual_report_failed": "Årsredovisningen kunde inte läsas in.",
     "status.calculating": "Beräknar rekommendation...",
     "button.calculating": "Beräknar...",
     "rule.main": "Huvudregeln",
@@ -352,9 +367,11 @@ const TRANSLATIONS = {
     "meta.description": "Salary and dividend planning for a Swedish limited company with transparent year-based tax logic.",
     "language.label": "Language",
     "button.actions": "Actions",
+    "button.import_annual_report": "Read annual report",
     "button.export_pdf": "Export PDF",
     "button.export_data": "Export data",
     "button.import_data": "Import data",
+    "button.importing_annual_report": "Reading annual report...",
     "button.exporting_pdf": "Exporting PDF...",
     "button.exporting_data": "Exporting data...",
     "button.importing_data": "Importing data...",
@@ -433,6 +450,14 @@ const TRANSLATIONS = {
     "button.calculate": "Calculate recommendation",
     "button.reset": "Reset saved values",
     "inputs.helper": "The app stores your form values in local browser storage and restores them on reload.",
+    "annual_report.badge": "Annual report",
+    "annual_report.status_title": "Imported values from annual report",
+    "annual_report.status_intro": "{count} fields were filled automatically. Review them before you continue.",
+    "annual_report.status_report": "Source: {filename}{meta}.",
+    "annual_report.status_report_meta": " ({companyName}, financial year {reportYear})",
+    "annual_report.field_source": "{fieldLabel}: {value} from {sourceLabel} on page {page}.",
+    "annual_report.field_source_no_page": "{fieldLabel}: {value} from {sourceLabel}.",
+    "annual_report.warning_prefix": "Note:",
     "recommended.title": "Recommended plan",
     "recommended.subtitle": "Closest to the target, then biased toward lower total tax.",
     "recommended.subtitle_target_then_tax": "Optimized to stay close to the user's target, then toward lower total tax.",
@@ -604,6 +629,8 @@ const TRANSLATIONS = {
     "error.export_failed": "PDF export failed.",
     "error.import_failed": "Import failed.",
     "error.import_invalid_format": "The file could not be read. Choose a valid export from TaxSplit.",
+    "error.annual_report_invalid_format": "The file could not be read. Choose a valid annual report PDF.",
+    "error.annual_report_failed": "The annual report could not be read.",
     "status.calculating": "Calculating recommendation...",
     "button.calculating": "Calculating...",
     "rule.main": "Main rule",
@@ -651,6 +678,7 @@ let activeSubmitRequestId = 0;
 let taxCatalog = new Map();
 let municipalTaxManualOverride = false;
 let applyingMunicipalTaxRate = false;
+let annualReportImportState = null;
 
 function formatCurrency(value) {
   return new Intl.NumberFormat(currentLanguage === "sv" ? "sv-SE" : "en-US", {
@@ -701,6 +729,10 @@ function applyStaticTranslations() {
   metaDescription.setAttribute("content", t("meta.description"));
   pageTitle.textContent = t("brand.app_name");
   appNameElement.textContent = t("brand.app_name");
+  if (annualReportImportState) {
+    applyAnnualReportFieldMarkers();
+    renderAnnualReportStatus();
+  }
 }
 
 function readSavedState() {
@@ -1044,6 +1076,172 @@ function setFieldValue(field, value) {
   field.value = value ?? "";
 }
 
+function getFieldWrapper(fieldName) {
+  const field = form.elements.namedItem(fieldName);
+  if (!field || typeof field.length === "number") {
+    return null;
+  }
+  return field.closest(".field");
+}
+
+function getFieldLabel(fieldName) {
+  const wrapper = getFieldWrapper(fieldName);
+  if (!wrapper) {
+    return fieldName;
+  }
+  const label = wrapper.querySelector(".label-text, span, small, legend");
+  return label ? label.textContent.trim() : fieldName;
+}
+
+function clearAnnualReportFieldMarkers() {
+  form.querySelectorAll(".field-autofilled").forEach((wrapper) => {
+    wrapper.classList.remove("field-autofilled");
+    delete wrapper.dataset.importedBadge;
+  });
+}
+
+function applyAnnualReportFieldMarkers() {
+  clearAnnualReportFieldMarkers();
+  if (!annualReportImportState?.fields) {
+    return;
+  }
+
+  Object.keys(annualReportImportState.fields).forEach((fieldName) => {
+    const wrapper = getFieldWrapper(fieldName);
+    if (!wrapper) {
+      return;
+    }
+    wrapper.classList.add("field-autofilled");
+    wrapper.dataset.importedBadge = t("annual_report.badge");
+  });
+}
+
+function clearAnnualReportField(fieldName) {
+  if (!annualReportImportState?.fields?.[fieldName]) {
+    return;
+  }
+
+  const nextFields = { ...annualReportImportState.fields };
+  delete nextFields[fieldName];
+
+  annualReportImportState = Object.keys(nextFields).length > 0
+    ? { ...annualReportImportState, fields: nextFields }
+    : null;
+
+  applyAnnualReportFieldMarkers();
+  renderAnnualReportStatus();
+}
+
+function renderAnnualReportStatus() {
+  if (!annualReportStatusBox) {
+    return;
+  }
+
+  if (!annualReportImportState?.fields || Object.keys(annualReportImportState.fields).length === 0) {
+    annualReportStatusBox.innerHTML = "";
+    annualReportStatusBox.classList.add("hidden");
+    return;
+  }
+
+  const fieldEntries = Object.entries(annualReportImportState.fields);
+  const meta = annualReportImportState.company_name && annualReportImportState.report_year
+    ? t("annual_report.status_report_meta", {
+      companyName: annualReportImportState.company_name,
+      reportYear: annualReportImportState.report_year,
+    })
+    : "";
+
+  const fieldItems = fieldEntries.map(([fieldName, detail]) => {
+    const sourceKey = detail.page
+      ? "annual_report.field_source"
+      : "annual_report.field_source_no_page";
+
+    return `<li>${t(sourceKey, {
+      fieldLabel: getFieldLabel(fieldName),
+      value: formatCurrency(detail.value),
+      sourceLabel: detail.source_label,
+      page: detail.page,
+    })}</li>`;
+  }).join("");
+
+  const warningItems = (annualReportImportState.warnings || []).map((warning) => (
+    `<li>${t("annual_report.warning_prefix")} ${warning}</li>`
+  )).join("");
+
+  annualReportStatusBox.innerHTML = `
+    <div class="note">
+      <strong>${t("annual_report.status_title")}</strong><br>
+      <div>${t("annual_report.status_intro", { count: fieldEntries.length })}</div>
+      <div>${t("annual_report.status_report", {
+        filename: annualReportImportState.filename,
+        meta,
+      })}</div>
+      <ul class="annual-report-list">${fieldItems}${warningItems}</ul>
+    </div>
+  `;
+  annualReportStatusBox.classList.remove("hidden");
+}
+
+function applyAnnualReportImport(payload) {
+  const importedFields = payload?.fields || {};
+  const nextState = { ...payload, fields: {} };
+
+  Object.entries(importedFields).forEach(([fieldName, detail]) => {
+    const field = form.elements.namedItem(fieldName);
+    if (!field || typeof field.length === "number") {
+      return;
+    }
+
+    const kind = field.dataset?.numberKind;
+    setFieldValue(field, kind ? formatInputValue(detail.value, kind) : detail.value);
+    nextState.fields[fieldName] = detail;
+  });
+
+  annualReportImportState = Object.keys(nextState.fields).length > 0 ? nextState : null;
+  refreshFormattedInputs();
+  saveState();
+  applyAnnualReportFieldMarkers();
+  renderAnnualReportStatus();
+}
+
+async function importAnnualReportFile(file) {
+  if (!file) {
+    return;
+  }
+
+  clearError();
+  importAnnualReportButton.disabled = true;
+  importAnnualReportButton.textContent = t("button.importing_annual_report");
+
+  try {
+    const body = new FormData();
+    body.append("file", file, file.name);
+
+    const response = await fetch("/api/import-annual-report", {
+      method: "POST",
+      body,
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || t("error.annual_report_failed"));
+    }
+
+    const payload = await response.json();
+    applyAnnualReportImport(payload);
+    await submitForm();
+  } catch (error) {
+    throw new Error(error.message || t("error.annual_report_invalid_format"));
+  } finally {
+    importAnnualReportButton.disabled = false;
+    importAnnualReportButton.textContent = t("button.import_annual_report");
+    importAnnualReportFileInput.value = "";
+    if (actionMenu) {
+      actionMenu.open = false;
+    }
+  }
+}
+
 async function fetchTaxCatalog(year) {
   if (taxCatalog.has(year)) {
     return taxCatalog.get(year);
@@ -1247,6 +1445,9 @@ function applyImportedState(source) {
   const imported = sanitizeImportedState(source);
   municipalTaxManualOverride = Boolean(imported._municipal_tax_manual_override);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(imported));
+  annualReportImportState = null;
+  applyAnnualReportFieldMarkers();
+  renderAnnualReportStatus();
   if (typeof imported.language === "string" && ["sv", "en"].includes(imported.language)) {
     currentLanguage = imported.language;
     localStorage.setItem(LANGUAGE_KEY, currentLanguage);
@@ -1257,6 +1458,7 @@ function applyImportedState(source) {
 
 function saveStateIfFormField(event) {
   if (event.target && event.target.name && form.contains(event.target)) {
+    clearAnnualReportField(event.target.name);
     saveState();
   }
 }
@@ -2102,6 +2304,14 @@ exportDataButton.addEventListener("click", () => {
   }
 });
 
+importAnnualReportButton.addEventListener("click", () => {
+  importAnnualReportFileInput.click();
+});
+
+importAnnualReportFileInput.addEventListener("change", () => {
+  importAnnualReportFile(importAnnualReportFileInput.files?.[0]).catch((error) => setError(error.message));
+});
+
 importDataButton.addEventListener("click", () => {
   importDataFileInput.click();
 });
@@ -2150,6 +2360,9 @@ form.addEventListener("submit", async (event) => {
 resetButton.addEventListener("click", () => {
   localStorage.removeItem(STORAGE_KEY);
   municipalTaxManualOverride = false;
+  annualReportImportState = null;
+  applyAnnualReportFieldMarkers();
+  renderAnnualReportStatus();
   restoreState().then(() => submitForm().catch((error) => setError(error.message)));
 });
 

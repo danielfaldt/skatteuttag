@@ -287,6 +287,21 @@ body {
   position: relative;
 }
 
+.field.field-autofilled::after {
+  content: attr(data-imported-badge);
+  position: absolute;
+  top: -10px;
+  right: 0;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
 .choice-field {
   border: 0;
   margin: 0;
@@ -465,6 +480,12 @@ select:focus {
   outline: none;
   border-color: var(--accent);
   box-shadow: 0 0 0 4px rgba(29, 122, 99, 0.12);
+}
+
+.field.field-autofilled input,
+.field.field-autofilled select {
+  border-color: rgba(29, 122, 99, 0.34);
+  background: linear-gradient(180deg, #fbfefc 0%, #eff8f3 100%);
 }
 
 .inline-input {
@@ -671,6 +692,17 @@ button[type="submit"] {
   margin: 12px 0 0;
   color: var(--muted);
   font-size: 0.9rem;
+}
+
+.annual-report-status {
+  margin-top: 16px;
+}
+
+.annual-report-list {
+  margin: 12px 0 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 6px;
 }
 
 .ownership-loading {

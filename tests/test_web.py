@@ -12,10 +12,13 @@ def test_index_renders():
     assert "Skatteuttag" in response.text
     assert 'id="language-switch"' in response.text
     assert 'id="action-menu"' in response.text
+    assert 'id="import-annual-report"' in response.text
+    assert 'id="import-annual-report-file"' in response.text
     assert 'id="export-data"' in response.text
     assert 'id="import-data"' in response.text
     assert 'id="import-data-file"' in response.text
     assert 'id="export-pdf"' in response.text
+    assert 'id="annual-report-status"' in response.text
     assert 'data-i18n="button.export_pdf"' in response.text
     assert 'id="compensation-mix-analysis"' in response.text
     assert 'id="problem-signals"' in response.text
@@ -87,6 +90,14 @@ def test_api_export_pdf_returns_pdf():
     assert response.status_code == 200
     assert response.headers["content-type"] == "application/pdf"
     assert response.content.startswith(b"%PDF")
+
+
+def test_api_import_annual_report_rejects_non_pdf():
+    response = client.post(
+        "/api/import-annual-report",
+        files={"file": ("not-a-pdf.txt", b"hello", "text/plain")},
+    )
+    assert response.status_code == 422
 
 
 def test_security_and_sitemap_exist():
@@ -165,12 +176,18 @@ def test_client_script_persists_form_state_on_input():
     assert 'document.addEventListener("click"' in body
     assert "/api/export-pdf" in body
     assert "button.actions" in body
+    assert "button.import_annual_report" in body
     assert "button.export_pdf" in body
     assert "evaluateArithmeticExpression" in body
     assert "positionInfoPopover" in body
     assert 'event.key !== "Enter"' in body
     assert "EXPORT_SCHEMA" in body
     assert "buildExportPayload" in body
+    assert "applyAnnualReportImport" in body
+    assert "importAnnualReportFile" in body
+    assert "/api/import-annual-report" in body
+    assert "annual_report.status_title" in body
+    assert "field-autofilled" in body
     assert "importDataFile" in body
     assert "downloadJsonFile" in body
     assert 'id="export-data"' in client.get("/").text
@@ -217,6 +234,8 @@ def test_styles_include_hidden_input_and_compact_checkbox_layout():
     assert ".checkbox-row-compact" in body
     assert ".action-menu" in body
     assert ".action-menu-panel" in body
+    assert ".annual-report-status" in body
+    assert ".field.field-autofilled::after" in body
     assert "max-width: calc(100vw - 32px);" in body
     assert "width: min(220px, calc(100vw - 48px));" in body
     assert ".hero-note {" in body
