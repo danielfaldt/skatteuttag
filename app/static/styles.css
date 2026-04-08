@@ -1001,7 +1001,19 @@ button[type="submit"] {
     margin: 18px auto 32px;
   }
 
+  .hero-note {
+    position: relative;
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .action-menu {
+    position: static;
+  }
+
   .action-menu-panel {
+    left: 0;
+    right: auto;
     width: min(220px, calc(100vw - 48px));
     min-width: 0;
     max-width: calc(100vw - 48px);

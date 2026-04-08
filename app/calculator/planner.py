@@ -916,6 +916,9 @@ def suggest_ownership_split(data: PlanningInput) -> dict[str, Any] | None:
 
     tax_saving = round(current_result["total_tax_burden"] - best_result["total_tax_burden"], 2)
     household_net_gain = round(best_result["household_net_from_company"] - current_result["household_net_from_company"], 2)
+    extraction_change = round(best_result["extraction_total"] - current_result["extraction_total"], 2)
+    best_variant = build_split_variant(data, best_percentage)
+    same_plan_result = evaluate_plan(best_variant, current_result["salary"], current_result["total_dividend"])
     if (
         best_percentage == round(data.user_share_percentage, 1)
         or (
@@ -936,6 +939,17 @@ def suggest_ownership_split(data: PlanningInput) -> dict[str, Any] | None:
         "suggested_total_tax_burden": best_result["total_tax_burden"],
         "current_household_net": current_result["household_net_from_company"],
         "suggested_household_net": best_result["household_net_from_company"],
+        "current_extraction_total": current_result["extraction_total"],
+        "suggested_extraction_total": best_result["extraction_total"],
+        "estimated_extraction_change": extraction_change,
+        "same_plan_household_net_change": round(
+            (same_plan_result["household_net_from_company"] - current_result["household_net_from_company"]) if same_plan_result else 0.0,
+            2,
+        ),
+        "same_plan_total_tax_change": round(
+            (same_plan_result["total_tax_burden"] - current_result["total_tax_burden"]) if same_plan_result else 0.0,
+            2,
+        ),
         "note": {"key": "note.ownership_suggestion_scope", "params": {}},
     }
 

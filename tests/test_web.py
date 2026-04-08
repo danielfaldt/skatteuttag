@@ -125,6 +125,12 @@ def test_client_script_persists_form_state_on_input():
     assert "ownership.proposal_label" in body
     assert "ownership.optimized_for_household" in body
     assert "ownership.household_net_gain" in body
+    assert "ownership.optimized_comparison_intro" in body
+    assert "ownership.same_plan_title" in body
+    assert "ownership.same_plan_guidance_small" in body
+    assert "estimated_extraction_change" in body
+    assert "same_plan_household_net_change" in body
+    assert "same_plan_total_tax_change" in body
     assert "field.household_min_net_income" in body
     assert "field.optimization_profile" in body
     assert "optimization.household_max.title" in body
@@ -213,6 +219,9 @@ def test_styles_include_hidden_input_and_compact_checkbox_layout():
     assert ".action-menu-panel" in body
     assert "max-width: calc(100vw - 32px);" in body
     assert "width: min(220px, calc(100vw - 48px));" in body
+    assert ".hero-note {" in body
+    assert "justify-content: flex-start;" in body
+    assert "left: 0;" in body
     assert ".tax-summary" in body
     assert ".hero {" in body
     assert "z-index: 4;" in body

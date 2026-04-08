@@ -248,11 +248,23 @@ const TRANSLATIONS = {
     "ownership.current_split": "Nuvarande fördelning: {userName} {userSharePercentage} % och {spouseName} {spouseSharePercentage} %.",
     "ownership.better_split": "Modellen hittar ett bättre hushållsutfall om {userName} äger {userSharePercentage} % och {spouseName} {spouseSharePercentage} %.",
     "ownership.optimized_for_household": "Förslaget är optimerat för hushållets maxläge, inte för närmast användarens personliga målnetto.",
-    "ownership.tax_saving": "Beräknad förändring i total skatt: {taxSaving}.",
+    "ownership.optimized_comparison_intro": "Jämförelsen nedan avser ett nytt optimerat upplägg under föreslagen ägarfördelning, inte bara en ren procentändring med samma lön och utdelning.",
+    "ownership.household_net_gain": "Med nytt optimerat upplägg ökar hushållets netto från bolaget med {householdNetGain}.",
+    "ownership.extraction_change_positive": "Det nya upplägget tar ut {amount} mer totalt från bolaget än nuvarande huvudförslag.",
+    "ownership.extraction_change_negative": "Det nya upplägget tar ut {amount} mindre totalt från bolaget än nuvarande huvudförslag.",
+    "ownership.extraction_change_neutral": "Det nya upplägget tar ut ungefär lika mycket totalt från bolaget som nuvarande huvudförslag.",
     "ownership.tax_saving_positive": "Total skatt minskar med {taxSaving}.",
     "ownership.tax_saving_negative": "Total skatt ökar med {taxSaving}.",
     "ownership.tax_saving_neutral": "Total skatt är i stort sett oförändrad.",
-    "ownership.household_net_gain": "Beräknad ökning av hushållets netto från bolaget: {householdNetGain}.",
+    "ownership.same_plan_title": "Ren effekt av bara ägarändringen",
+    "ownership.same_plan_household_gain_positive": "Om lön och utdelning hålls oförändrade ökar hushållets netto med {amount}.",
+    "ownership.same_plan_household_gain_negative": "Om lön och utdelning hålls oförändrade minskar hushållets netto med {amount}.",
+    "ownership.same_plan_household_gain_neutral": "Om lön och utdelning hålls oförändrade blir hushållets netto i stort sett oförändrat.",
+    "ownership.same_plan_tax_change_positive": "Med samma lön och utdelning ökar total skatt med {amount}.",
+    "ownership.same_plan_tax_change_negative": "Med samma lön och utdelning minskar total skatt med {amount}.",
+    "ownership.same_plan_tax_change_neutral": "Med samma lön och utdelning är total skatt i stort sett oförändrad.",
+    "ownership.same_plan_guidance_small": "Det tyder på att själva ägarändringen har liten ekonomisk effekt på egen hand.",
+    "ownership.same_plan_guidance_large": "Det tyder på att själva ägarändringen i sig har märkbar ekonomisk effekt.",
     "ownership.no_better_split": "Ingen bättre ägarfördelning hittades inom modellens sökyta.",
     "ownership.no_better_split_detail": "Nuvarande fördelning ser redan stark ut utifrån hushållets netto och total skatt givet inmatningen och de antaganden som används här.",
     "ownership.loading": "Huvudrekommendationen och löne- mot utdelningsanalysen visas redan. Nu testar appen alternativa ägarfördelningar för att se om hushållets netto från bolaget kan förbättras ytterligare.",
@@ -527,11 +539,23 @@ const TRANSLATIONS = {
     "ownership.current_split": "Current split: {userName} {userSharePercentage}% and {spouseName} {spouseSharePercentage}%.",
     "ownership.better_split": "The model finds a better household outcome if {userName} owns {userSharePercentage}% and {spouseName} owns {spouseSharePercentage}%.",
     "ownership.optimized_for_household": "This proposal is optimized for the household maximum, not for the closest match to the user's personal net-income target.",
-    "ownership.tax_saving": "Estimated change in total tax: {taxSaving}.",
+    "ownership.optimized_comparison_intro": "The comparison below reflects a newly optimized plan under the suggested ownership split, not just a pure percentage change with the same salary and dividend.",
+    "ownership.household_net_gain": "With a newly optimized plan, household net from the company increases by {householdNetGain}.",
+    "ownership.extraction_change_positive": "The new plan extracts {amount} more in total from the company than the current main recommendation.",
+    "ownership.extraction_change_negative": "The new plan extracts {amount} less in total from the company than the current main recommendation.",
+    "ownership.extraction_change_neutral": "The new plan extracts roughly the same total amount from the company as the current main recommendation.",
     "ownership.tax_saving_positive": "Total tax decreases by {taxSaving}.",
     "ownership.tax_saving_negative": "Total tax increases by {taxSaving}.",
     "ownership.tax_saving_neutral": "Total tax is broadly unchanged.",
-    "ownership.household_net_gain": "Estimated increase in household net from the company: {householdNetGain}.",
+    "ownership.same_plan_title": "Pure effect of the ownership change alone",
+    "ownership.same_plan_household_gain_positive": "If salary and dividends are kept unchanged, household net increases by {amount}.",
+    "ownership.same_plan_household_gain_negative": "If salary and dividends are kept unchanged, household net decreases by {amount}.",
+    "ownership.same_plan_household_gain_neutral": "If salary and dividends are kept unchanged, household net is broadly unchanged.",
+    "ownership.same_plan_tax_change_positive": "With the same salary and dividends, total tax increases by {amount}.",
+    "ownership.same_plan_tax_change_negative": "With the same salary and dividends, total tax decreases by {amount}.",
+    "ownership.same_plan_tax_change_neutral": "With the same salary and dividends, total tax is broadly unchanged.",
+    "ownership.same_plan_guidance_small": "That suggests the ownership change itself has only a small economic effect on its own.",
+    "ownership.same_plan_guidance_large": "That suggests the ownership change itself has a meaningful economic effect on its own.",
     "ownership.no_better_split": "No better ownership split was found within the model search space.",
     "ownership.no_better_split_detail": "The current split already looks strong on household net and total tax given the inputs and assumptions used here.",
     "ownership.loading": "The main recommendation and the salary-versus-dividend analysis are already shown. The app is now testing alternative ownership splits to see whether household net from the company can be improved further.",
@@ -1554,6 +1578,46 @@ function renderOwnershipSuggestion(result) {
     });
   }
 
+  let extractionImpactText = t("ownership.extraction_change_neutral");
+  if (suggestion.estimated_extraction_change > 1) {
+    extractionImpactText = t("ownership.extraction_change_positive", {
+      amount: formatCurrency(suggestion.estimated_extraction_change),
+    });
+  } else if (suggestion.estimated_extraction_change < -1) {
+    extractionImpactText = t("ownership.extraction_change_negative", {
+      amount: formatCurrency(Math.abs(suggestion.estimated_extraction_change)),
+    });
+  }
+
+  let samePlanHouseholdText = t("ownership.same_plan_household_gain_neutral");
+  if (suggestion.same_plan_household_net_change > 1) {
+    samePlanHouseholdText = t("ownership.same_plan_household_gain_positive", {
+      amount: formatCurrency(suggestion.same_plan_household_net_change),
+    });
+  } else if (suggestion.same_plan_household_net_change < -1) {
+    samePlanHouseholdText = t("ownership.same_plan_household_gain_negative", {
+      amount: formatCurrency(Math.abs(suggestion.same_plan_household_net_change)),
+    });
+  }
+
+  let samePlanTaxText = t("ownership.same_plan_tax_change_neutral");
+  if (suggestion.same_plan_total_tax_change > 1) {
+    samePlanTaxText = t("ownership.same_plan_tax_change_positive", {
+      amount: formatCurrency(suggestion.same_plan_total_tax_change),
+    });
+  } else if (suggestion.same_plan_total_tax_change < -1) {
+    samePlanTaxText = t("ownership.same_plan_tax_change_negative", {
+      amount: formatCurrency(Math.abs(suggestion.same_plan_total_tax_change)),
+    });
+  }
+
+  const samePlanGuidanceKey = Math.max(
+    Math.abs(suggestion.same_plan_household_net_change || 0),
+    Math.abs(suggestion.same_plan_total_tax_change || 0),
+  ) > 10_000
+    ? "ownership.same_plan_guidance_large"
+    : "ownership.same_plan_guidance_small";
+
   ownershipSuggestionBox.innerHTML = `
     <div class="note">
       <strong>${t("ownership.title")}</strong><br>
@@ -1573,15 +1637,23 @@ function renderOwnershipSuggestion(result) {
         </div>
       </div>
       <div>${t("ownership.optimized_for_household")}</div>
+      <div>${t("ownership.optimized_comparison_intro")}</div>
       ${t("ownership.household_net_gain", {
         householdNetGain: formatCurrency(suggestion.estimated_household_net_gain),
       })}<br>
+      ${extractionImpactText}<br>
       ${taxImpactText}<br>
+      <div class="ownership-same-plan">
+        <strong>${t("ownership.same_plan_title")}</strong><br>
+        ${samePlanHouseholdText}<br>
+        ${samePlanTaxText}<br>
+        ${t(samePlanGuidanceKey)}
+      </div>
       ${translateMessage(suggestion.note)}
       ${analysisMetaBlock({
         method: t("analysis.ownership_method"),
         controls: [t("ownership.optimized_for_household")],
-        constraints: [taxImpactText],
+        constraints: [extractionImpactText, taxImpactText],
       })}
     </div>
   `;
