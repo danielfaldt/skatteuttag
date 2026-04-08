@@ -110,9 +110,11 @@ def test_client_script_persists_form_state_on_input():
     assert "field.user_birth_year" in body
     assert "field.spouse_birth_year" in body
     assert "info.opening_retained_earnings" in body
-    assert "balansräkningen eller i noten/förändringen för eget kapital" in body
-    assert "resultat före skatt eller resultat efter finansiella poster" in body
+    assert "balansräkningen eller i förändringen av eget kapital" in body
+    assert "resultat efter finansiella poster" in body
+    assert "resultat före skatt kan annars bli för låg här" in body
     assert "info.periodization_fund_change" in body
+    assert "förra årets redan bokförda avsättning" in body
     assert "arbetsgivardeklarationer eller bokföringens lönekonton" in body
     assert "ownership.loading_title" in body
     assert "ownership-loading" in body
