@@ -139,7 +139,7 @@ const TRANSLATIONS = {
     "info.car_benefit_is_pensionable": "Kryssa bara i detta om ert pensionsupplägg faktiskt räknar bilförmånen som pensionsgrundande lön. Är du osäker är det normalt säkrast att låta den vara av. Det påverkar bara hur stor tjänstepension modellen tillåter.",
     "info.user_share_percentage": "Det enklaste normala sättet att ändra ägarandel är oftast att en ägare överlåter aktier till den andra genom gåva eller försäljning. Kontrollera bolagsordning och eventuellt aktieägaravtal, skriv en överlåtelsehandling, uppdatera aktieboken direkt och anmäl ändringen via verksamt.se.",
     "info.goal_section": "Här styr du vad huvudförslaget ska optimera mot och vilka resultatnivåer modellen ska försöka respektera.",
-    "info.optimization_profile": "Välj om appen främst ska jaga användarens mål, hushållets högsta netto eller lägsta total skatt. Det valet avgör vilket scenario som blir huvudförslag.",
+    "info.optimization_profile": "Välj om appen främst ska jaga användarens mål, hålla sig under brytpunkten för statlig skatt och inom kvalificerat utdelningsutrymme när det går, maximera hushållets netto eller minimera total skatt. Det valet avgör vilket scenario som blir huvudförslag.",
     "compensation.title": "Justeringar i ersättningen",
     "compensation.subtitle": "Bilförmån, tjänstepension och periodiseringsfond modelleras ovanpå vald kontant lön.",
     "placeholder.user_display_name": "Ditt namn",
@@ -160,6 +160,7 @@ const TRANSLATIONS = {
     "recommended.title": "Rekommenderad plan",
     "recommended.subtitle": "Närmast målet, därefter prioritet på lägre total skatt.",
     "recommended.subtitle_target_then_tax": "Optimerad för att komma nära användarens mål, därefter lägre total skatt.",
+    "recommended.subtitle_guardrails": "Optimerad för att hålla sig under statlig skatt och inom kvalificerat utdelningsutrymme när det är möjligt.",
     "recommended.subtitle_household_max": "Optimerad för hushållets högsta netto från bolaget, därefter lägre total skatt.",
     "recommended.subtitle_tax_min": "Optimerad för lägsta total skatt efter att satta mål nås så långt som möjligt.",
     "recommended.empty": "Skicka formuläret för att få en rekommendation.",
@@ -178,6 +179,8 @@ const TRANSLATIONS = {
     "problem.dividend_cap_reached": "Förslaget använder i praktiken hela den tillgängliga utdelningslikviden i modellen.",
     "optimization.target_then_tax.title": "Närmast mål",
     "optimization.target_then_tax.description": "Prioritera användarens önskade netto, välj sedan lägre total skatt.",
+    "optimization.guardrails.title": "Under brytpunkt och 20 %",
+    "optimization.guardrails.description": "Försök hålla lönen under statlig skatt och utdelningen inom kvalificerat utdelningsutrymme innan modellen går vidare till högre skatt.",
     "optimization.household_max.title": "Högst hushållsnetto",
     "optimization.household_max.description": "Prioritera högsta gemensamma netto från bolaget för hushållet.",
     "optimization.tax_min.title": "Lägst skatt",
@@ -247,6 +250,8 @@ const TRANSLATIONS = {
     "alternative.lowest_total_tax_desc": "Det scenario som ger lägst total skatt inom samma bolagsbudget.",
     "alternative.highest_household_net": "Högsta hushållsnetto",
     "alternative.highest_household_net_desc": "Det scenario som ger högst gemensamt netto från bolaget för hushållet.",
+    "alternative.within_lower_tax_guardrails": "Under brytpunkt och 20 %",
+    "alternative.within_lower_tax_guardrails_desc": "Försöker hålla lönen under statlig skatt och utdelningen inom kvalificerat utdelningsutrymme innan högre skattenivåer används.",
     "scenario.salary": "Lön",
     "scenario.total_dividend": "Total utdelning",
     "scenario.user_net": "Användarens netto",
@@ -292,6 +297,7 @@ const TRANSLATIONS = {
     "mix.summary_dividend_only": "Rekommendationen lutar helt mot utdelning i det här spannet.",
     "mix.summary_mixed": "Rekommendationen använder en mix där cirka {salarySharePercentage} % tas som lön och {dividendSharePercentage} % som utdelning.",
     "mix.reason_target_priority": "Den här mixen valdes först för att komma så nära användarens nettomål som möjligt.",
+    "mix.reason_guardrails_priority": "Den här mixen valdes först för att hålla lönen under statlig skatt och utdelningen inom kvalificerat utdelningsutrymme när det är möjligt.",
     "mix.reason_dividend_room_used": "Utdelning används eftersom det finns kvalificerat utdelningsutrymme att nyttja.",
     "mix.reason_salary_dominant": "Modellen hittar ingen utdelning som förbättrar utfallet jämfört med ren lön i det här läget.",
     "mix.reason_near_state_breakpoint": "Lönen ligger nära brytpunkten för statlig skatt, vilket ofta är ett känsligt område i planeringen.",
@@ -314,6 +320,7 @@ const TRANSLATIONS = {
     "analysis.ownership_method": "Appen räknade om huvudförslaget för flera möjliga ägarandelar och jämförde hushållsnetto, total skatt och målträff.",
     "analysis.alternatives_method": "De här scenarierna är nyttiga jämförelsepunkter inom samma bolagsbudget och regelverk som huvudförslaget.",
     "analysis.control_profile_target_then_tax": "Profil: närmast användarens nettomål, sedan lägre total skatt.",
+    "analysis.control_profile_guardrails": "Profil: håll lönen under statlig skatt och utdelningen inom kvalificerat utrymme när det går.",
     "analysis.control_profile_household_max": "Profil: högsta hushållsnetto från bolaget, sedan lägre total skatt.",
     "analysis.control_profile_tax_min": "Profil: lägsta total skatt efter att satta mål nås så långt som möjligt.",
     "analysis.control_household_floor_active": "En miniminivå på {amount} netto från bolaget är satt för hushållet.",
@@ -448,7 +455,7 @@ const TRANSLATIONS = {
     "info.car_benefit_is_pensionable": "Tick this only if your pension setup actually treats the car benefit as pensionable salary. If you are unsure, it is usually safer to leave it unticked. It only changes how much occupational pension the model allows.",
     "info.user_share_percentage": "The simplest normal route is usually that one owner transfers shares to the other through a gift or sale. Check the articles of association and any shareholders' agreement first, write a transfer agreement, update the share register immediately, and report the change through verksamt.se.",
     "info.goal_section": "This section controls what the main recommendation should optimize for and which result levels the model should try to respect.",
-    "info.optimization_profile": "Choose whether the app should mainly chase the user's target, the household's highest net outcome, or the lowest total tax. That choice decides which scenario becomes the main recommendation.",
+    "info.optimization_profile": "Choose whether the app should mainly chase the user's target, stay below state income tax and inside qualified dividend room where possible, maximize household net, or minimize total tax. That choice decides which scenario becomes the main recommendation.",
     "compensation.title": "Compensation adjustments",
     "compensation.subtitle": "Benefit value, pension, and periodization fund are modelled on top of the selected cash salary.",
     "placeholder.user_display_name": "Your name",
@@ -469,6 +476,7 @@ const TRANSLATIONS = {
     "recommended.title": "Recommended plan",
     "recommended.subtitle": "Closest to the target, then biased toward lower total tax.",
     "recommended.subtitle_target_then_tax": "Optimized to stay close to the user's target, then toward lower total tax.",
+    "recommended.subtitle_guardrails": "Optimized to stay below state income tax and inside qualified dividend room where possible.",
     "recommended.subtitle_household_max": "Optimized for the household's highest net income from the company, then toward lower total tax.",
     "recommended.subtitle_tax_min": "Optimized for the lowest total tax after the entered goals are met as far as possible.",
     "recommended.empty": "Submit the form to generate a recommendation.",
@@ -487,6 +495,8 @@ const TRANSLATIONS = {
     "problem.dividend_cap_reached": "The proposal is effectively using the full available dividend cash in the model.",
     "optimization.target_then_tax.title": "Closest to target",
     "optimization.target_then_tax.description": "Prioritize the user's requested net income, then prefer lower total tax.",
+    "optimization.guardrails.title": "Below state tax and inside 20%",
+    "optimization.guardrails.description": "Try to keep salary below state income tax and dividends inside qualified dividend room before the model accepts higher-tax outcomes.",
     "optimization.household_max.title": "Highest household net",
     "optimization.household_max.description": "Prioritize the highest combined net income from the company for the household.",
     "optimization.tax_min.title": "Lowest tax",
@@ -556,6 +566,8 @@ const TRANSLATIONS = {
     "alternative.lowest_total_tax_desc": "The scenario that gives the lowest total tax within the same company budget.",
     "alternative.highest_household_net": "Highest household net",
     "alternative.highest_household_net_desc": "The scenario that gives the highest combined net income from the company for the household.",
+    "alternative.within_lower_tax_guardrails": "Below state tax and inside 20%",
+    "alternative.within_lower_tax_guardrails_desc": "Tries to keep salary below state income tax and dividends inside qualified dividend room before moving into higher-tax layers.",
     "scenario.salary": "Salary",
     "scenario.total_dividend": "Total dividend",
     "scenario.user_net": "User net",
@@ -601,6 +613,7 @@ const TRANSLATIONS = {
     "mix.summary_dividend_only": "The recommendation leans entirely toward dividends in this range.",
     "mix.summary_mixed": "The recommendation uses a mix where about {salarySharePercentage}% is taken as salary and {dividendSharePercentage}% as dividends.",
     "mix.reason_target_priority": "This mix was selected first to stay as close as possible to the user's net-income target.",
+    "mix.reason_guardrails_priority": "This mix was selected first to keep salary below state income tax and dividends inside qualified dividend room where possible.",
     "mix.reason_dividend_room_used": "Dividends are used because qualified dividend room is available.",
     "mix.reason_salary_dominant": "The model does not find any dividend usage that improves the result compared with salary only in this case.",
     "mix.reason_near_state_breakpoint": "Salary is close to the state-tax breakpoint, which is often a sensitive planning zone.",
@@ -623,6 +636,7 @@ const TRANSLATIONS = {
     "analysis.ownership_method": "The app recalculated the main recommendation for multiple ownership splits and compared household net, total tax, and target fit.",
     "analysis.alternatives_method": "These scenarios are useful comparison points within the same company budget and rule set as the main recommendation.",
     "analysis.control_profile_target_then_tax": "Profile: closest to the user's net-income target, then lower total tax.",
+    "analysis.control_profile_guardrails": "Profile: keep salary below state income tax and dividends inside qualified room where possible.",
     "analysis.control_profile_household_max": "Profile: highest household net from the company, then lower total tax.",
     "analysis.control_profile_tax_min": "Profile: lowest total tax after the entered goals are met as far as possible.",
     "analysis.control_household_floor_active": "The household floor is set to at least {amount} net from the company.",
@@ -1601,6 +1615,7 @@ function currentOptimizationProfile(result = null) {
 }
 
 function recommendationSubtitleKey(profile) {
+  if (profile === "guardrails") return "recommended.subtitle_guardrails";
   if (profile === "household_max") return "recommended.subtitle_household_max";
   if (profile === "tax_min") return "recommended.subtitle_tax_min";
   return "recommended.subtitle_target_then_tax";
@@ -1609,6 +1624,7 @@ function recommendationSubtitleKey(profile) {
 function recommendationControlTexts(result) {
   const profileKey = {
     target_then_tax: "analysis.control_profile_target_then_tax",
+    guardrails: "analysis.control_profile_guardrails",
     household_max: "analysis.control_profile_household_max",
     tax_min: "analysis.control_profile_tax_min",
   }[currentOptimizationProfile(result)] || "analysis.control_profile_target_then_tax";
@@ -2050,6 +2066,7 @@ function renderAlternatives(result) {
     "Maximum user net": "alternative.maximum_user_net",
     "Lowest total tax": "alternative.lowest_total_tax",
     "Highest household net": "alternative.highest_household_net",
+    "Within lower tax guardrails": "alternative.within_lower_tax_guardrails",
   };
   const descriptionMap = {
     "Lower salary focus with heavier reliance on dividends.": "alternative.dividend_led_desc",
@@ -2057,6 +2074,7 @@ function renderAlternatives(result) {
     "Highest user after-tax income the model can find within the current company budget.": "alternative.maximum_user_net_desc",
     "Lowest total tax burden that the model can find within the current company budget.": "alternative.lowest_total_tax_desc",
     "Highest combined household net from the company that the model can find within the current company budget.": "alternative.highest_household_net_desc",
+    "Keeps salary under state income tax when possible and keeps dividends inside qualified room before service taxation.": "alternative.within_lower_tax_guardrails_desc",
   };
 
   const cards = result.alternatives

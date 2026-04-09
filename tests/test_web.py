@@ -34,6 +34,7 @@ def test_index_renders():
     assert 'name="spouse_birth_year" type="number"' in response.text
     assert 'name="household_min_net_income"' in response.text
     assert 'name="optimization_profile"' in response.text
+    assert 'value="guardrails"' in response.text
     assert 'name="user_other_salary_income"' in response.text
     assert 'name="planned_user_pension"' in response.text
     assert 'name="car_benefit_is_pensionable"' in response.text
@@ -170,6 +171,7 @@ def test_client_script_persists_form_state_on_input():
     assert "field.household_min_net_income" in body
     assert "field.optimization_profile" in body
     assert "optimization.household_max.title" in body
+    assert "optimization.guardrails.title" in body
     assert "info.goal_section" in body
     assert "info.optimization_profile" in body
     assert "recommended.final_summary_pending" in body
@@ -179,11 +181,15 @@ def test_client_script_persists_form_state_on_input():
     assert "note.company_budget_non_cash" in body
     assert "analysis.recommendation_method" in body
     assert "analysis.constraint_user_target" in body
+    assert "analysis.control_profile_guardrails" in body
     assert "recommended.subtitle_household_max" in body
+    assert "recommended.subtitle_guardrails" in body
     assert "renderCompensationMixAnalysis" in body
     assert "mix.title" in body
     assert "mix.summary_mixed" in body
+    assert "mix.reason_guardrails_priority" in body
     assert "mix.comparison_more_salary" in body
+    assert "alternative.within_lower_tax_guardrails" in body
     assert "recommended.final_title" in body
     assert "renderFinalPlan" in body
     assert "ownership-comparison-row" in body

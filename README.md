@@ -13,7 +13,7 @@ The primary company input is the company result before corporate tax. The app th
 - Locale-friendly number formatting with thousands separators in the browser
 - Municipal-tax auto-fill from official Skatteverket municipality and parish tables for `2025` and `2026`, plus a derived total-local-tax display that shows burial fee and optional church fee separately from the editable income-tax field
 - Salary and dividend recommendation aimed at the user's target annual net income
-- Adjustable optimization profile for the main recommendation, including target-fit, household-maximum, and tax-minimizing modes
+- Adjustable optimization profile for the main recommendation, including target-fit, lower-tax guardrails, household-maximum, and tax-minimizing modes
 - Optional household net floor that can be used as a hard steering condition in the recommendation search
 - Explicit salary-versus-dividend analysis with reasoning and nearby comparison mixes
 - Server-generated PDF export for formal review by advisors, auditors, or the user
@@ -91,7 +91,7 @@ docker compose --env-file .env.dev run --rm test
 - The spouse's external salary only affects the spouse's tax result where dividends spill into service taxation.
 - Dividends are limited to current-year post-corporate-tax profit plus any opening retained earnings entered by the user.
 - The visible municipal-tax field models municipal and regional income tax. Burial fee and optional church fee are fetched separately from municipality and parish data.
-- The main recommendation can prioritize user target-fit, highest household net, or lowest total tax depending on the selected optimization profile.
+- The main recommendation can prioritize user target-fit, staying under state income tax and inside qualified dividend room where feasible, highest household net, or lowest total tax depending on the selected optimization profile.
 - The app still uses one shared local tax setup for the household rather than separate municipality selections per owner.
 - The current implementation supports planning years `2025` and `2026` only.
 

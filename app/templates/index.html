@@ -159,6 +159,10 @@
                     <span class="choice-title" data-i18n="optimization.target_then_tax.title">Closest to the user's target</span>
                   </label>
                   <label class="choice-card">
+                    <input type="radio" name="optimization_profile" value="guardrails" {% if defaults.optimization_profile == "guardrails" %}checked{% endif %}>
+                    <span class="choice-title" data-i18n="optimization.guardrails.title">Below state tax and inside qualified dividend room</span>
+                  </label>
+                  <label class="choice-card">
                     <input type="radio" name="optimization_profile" value="household_max" {% if defaults.optimization_profile == "household_max" %}checked{% endif %}>
                     <span class="choice-title" data-i18n="optimization.household_max.title">Maximize household net</span>
                   </label>

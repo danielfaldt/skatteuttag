@@ -51,7 +51,7 @@ docker compose --env-file .env.dev run --rm test
 - Keep the year linkage explicit: one chosen planning year, plus derived salary-base year.
 - Keep browser-loaded static assets same-origin via `/static/...` paths so the app works correctly over both direct HTTP and proxied HTTPS.
 - Keep static asset URLs cache-busted from the page template so new frontend error handling reaches browsers immediately after deploy.
-- The main recommendation is steerable through `optimization_profile` plus `household_min_net_income`.
+- The main recommendation is steerable through `optimization_profile` plus `household_min_net_income`, including a guardrails mode that prioritizes staying below state income tax and inside qualified dividend room where feasible.
 - Treat user-entered car benefit as taxable compensation that affects tax and employer contributions but not cash net salary toward the target.
 - Treat positive `periodization_fund_change` as an allocation and negative values as reversal that cannot exceed the stated opening balance.
 - Surface periodization-fund and pension-limit input errors explicitly; do not collapse them into a generic "no feasible scenario" message.

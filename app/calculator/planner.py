@@ -70,7 +70,7 @@ class PlanningInput(BaseModel):
     @field_validator("optimization_profile")
     @classmethod
     def validate_optimization_profile(cls, value: str) -> str:
-        allowed = {"target_then_tax", "household_max", "tax_min"}
+        allowed = {"target_then_tax", "household_max", "tax_min", "guardrails"}
         if value not in allowed:
             raise ValueError(f"Unsupported optimization profile. Choose one of: {', '.join(sorted(allowed))}.")
         return value
@@ -442,6 +442,11 @@ def evaluate_plan(data: PlanningInput, planned_salary: float, total_dividend: fl
         + company["pension_special_payroll_tax"]
         + company["corporate_tax"]
     )
+    total_qualified_dividend_room = spaces.user_space + spaces.spouse_space
+    state_threshold_gross = max(
+        SALARY_RULES[data.year].state_tax_threshold_taxable + 17_400 - data.user_other_salary_income - data.user_car_benefit,
+        0.0,
+    )
 
     return {
         "salary": round(planned_salary, 2),
@@ -454,6 +459,8 @@ def evaluate_plan(data: PlanningInput, planned_salary: float, total_dividend: fl
         "shortfall_to_target": round(max(data.target_user_net_income - user_net_from_company, 0.0), 2),
         "overshoot_to_target": round(max(user_net_from_company - data.target_user_net_income, 0.0), 2),
         "household_shortfall_to_floor": round(max(data.household_min_net_income - household_net_from_company, 0.0), 2),
+        "salary_above_state_breakpoint": round(max(planned_salary - state_threshold_gross, 0.0), 2),
+        "dividend_above_qualified_room": round(max(total_dividend - total_qualified_dividend_room, 0.0), 2),
         "extraction_total": round(extraction_total, 2),
         "total_tax_burden": round(total_tax_burden, 2),
         "company": company,
@@ -488,6 +495,20 @@ def recommendation_sort_key(data: PlanningInput, item: dict[str, Any]) -> tuple[
             item["total_tax_burden"],
             item["overshoot_to_target"],
             -item["household_net_from_company"],
+            item["salary"],
+        )
+
+    if data.optimization_profile == "guardrails":
+        return (
+            0 if household_shortfall == 0 else 1,
+            household_shortfall,
+            0 if item["shortfall_to_target"] == 0 else 1,
+            item["shortfall_to_target"],
+            item["salary_above_state_breakpoint"],
+            item["dividend_above_qualified_room"],
+            item["extraction_total"],
+            item["total_tax_burden"],
+            item["overshoot_to_target"],
             item["salary"],
         )
 
@@ -646,6 +667,22 @@ def build_alternative_scenarios(data: PlanningInput, evaluated: list[dict[str, A
             ),
         }
     )
+    recommendations.append(
+        {
+            "label": "Within lower tax guardrails",
+            "description": "Keeps salary under state income tax when possible and keeps dividends inside qualified room before service taxation.",
+            "scenario": min(
+                evaluated,
+                key=lambda item: (
+                    item["salary_above_state_breakpoint"],
+                    item["dividend_above_qualified_room"],
+                    item["distance_to_target"],
+                    item["extraction_total"],
+                    item["total_tax_burden"],
+                ),
+            ),
+        }
+    )
 
     unique_labels = []
     seen = set()
@@ -687,7 +724,10 @@ def build_compensation_mix_analysis(
             },
         }
 
-    reasons: list[dict[str, Any]] = [{"key": "mix.reason_target_priority", "params": {}}]
+    if data.optimization_profile == "guardrails":
+        reasons = [{"key": "mix.reason_guardrails_priority", "params": {}}]
+    else:
+        reasons = [{"key": "mix.reason_target_priority", "params": {}}]
     if recommended["total_dividend"] > 1 and total_dividend_room > 1:
         reasons.append({"key": "mix.reason_dividend_room_used", "params": {}})
     elif recommended["total_dividend"] <= 1:
@@ -1010,6 +1050,7 @@ def plan_compensation(payload: dict[str, Any], *, include_ownership_analysis: bo
         "target_then_tax": "explanation.recommendation_profile_target_then_tax",
         "household_max": "explanation.recommendation_profile_household_max",
         "tax_min": "explanation.recommendation_profile_tax_min",
+        "guardrails": "explanation.recommendation_profile_guardrails",
     }[data.optimization_profile]
 
     return {
