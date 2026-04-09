@@ -37,11 +37,10 @@ docker compose --env-file .env.dev run --rm test
 - `app/main.py`: routes and HTTP surface
 - `app/calculator/rules.py`: year constants for `2025` and `2026`
 - `app/calculator/tax.py`: personal-tax logic for earned income, service-taxed dividend overflow, burial fee, church fee, and senior-age tax handling
-- `app/calculator/planner.py`: dividend room, scenario evaluation, company budget, pension limits, year-specific local-tax defaults, compensation-mix analysis, ownership analysis, and recommendation selection
+- `app/calculator/planner.py`: dividend room, scenario evaluation, company budget, pension limits, year-specific local-tax defaults, compensation-mix analysis, ownership analysis, recommendation selection, and the `ownership_analysis_pending` flag used while the background ownership analysis is still running
 - `app/tax_rates.py`: official Skatteverket municipality/parish tax catalog parsing for `2025` and `2026`
 - `app/templates/index.html`: page shell
-- `app/static/app.js`: client behavior, local storage, Swedish/English i18n, actions menu, and derived local-tax summary
-- `app/static/app.js`: client behavior, local storage, Swedish/English i18n, actions menu, derived local-tax summary, and export staleness guard for embedded analysis
+- `app/static/app.js`: client behavior, local storage, Swedish/English i18n, actions menu, derived local-tax summary, export staleness guard for embedded analysis, and provisional/final result-state handling while ownership analysis completes
 - `app/static/styles.css`: UI styling
 
 ## Conventions
@@ -51,6 +50,7 @@ docker compose --env-file .env.dev run --rm test
 - Use `apply_patch` for manual file edits.
 - Keep the year linkage explicit: one chosen planning year, plus derived salary-base year.
 - Keep browser-loaded static assets same-origin via `/static/...` paths so the app works correctly over both direct HTTP and proxied HTTPS.
+- Keep static asset URLs cache-busted from the page template so new frontend error handling reaches browsers immediately after deploy.
 - The main recommendation is steerable through `optimization_profile` plus `household_min_net_income`.
 - Treat user-entered car benefit as taxable compensation that affects tax and employer contributions but not cash net salary toward the target.
 - Treat positive `periodization_fund_change` as an allocation and negative values as reversal that cannot exceed the stated opening balance.

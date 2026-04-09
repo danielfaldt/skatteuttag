@@ -9,7 +9,7 @@
       name="description"
       content="Salary and dividend planning for a Swedish limited company with transparent year-based tax logic."
     >
-    <link rel="stylesheet" href="/static/styles.css">
+    <link rel="stylesheet" href="/static/styles.css?v={{ asset_version }}">
   </head>
   <body>
     <main class="shell">
@@ -460,6 +460,6 @@
       window.APP_BASE_URL = {{ app_base_url | tojson }};
       window.APP_NAMES = { sv: "Skatteuttag", en: "TaxSplit" };
     </script>
-    <script src="/static/app.js" defer></script>
+    <script src="/static/app.js?v={{ asset_version }}" defer></script>
   </body>
 </html>

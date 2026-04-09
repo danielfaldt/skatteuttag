@@ -16,6 +16,7 @@ from .tax_rates import municipality_payload
 
 
 BASE_DIR = Path(__file__).resolve().parent
+STATIC_DIR = BASE_DIR / "static"
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
 app = FastAPI(title=settings.app_name)
@@ -25,6 +26,10 @@ app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="stat
 @app.get("/", response_class=HTMLResponse)
 def index(request: Request) -> HTMLResponse:
     defaults = PlanningInput().model_dump()
+    asset_version = max(
+        int((STATIC_DIR / "app.js").stat().st_mtime),
+        int((STATIC_DIR / "styles.css").stat().st_mtime),
+    )
     return templates.TemplateResponse(
         request,
         "index.html",
@@ -33,6 +38,7 @@ def index(request: Request) -> HTMLResponse:
             "defaults": defaults,
             "supported_years": SUPPORTED_YEARS,
             "app_base_url": settings.app_base_url,
+            "asset_version": asset_version,
         },
     )
 
