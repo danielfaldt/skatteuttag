@@ -1,11 +1,12 @@
 # TODO
 
-<!-- next-id: 18 -->
+<!-- next-id: 19 -->
 
 <!-- screenshots: add [ss://...] at end of todo line; multiple separated by ; -->
 
 ## Open
 
+- [ ] T018 · Vi vill ju inte länsa bolaget. Egentligen vill vi nog helst ligga under 20%-skattegränsen (eller 2/3 30%). Just nu känns det som att vi försöker länsa bolaget på medel istället för att ta ut lagom för ändamålet och målet. Finns heller inget alternativ för ”under statlig inkomstskatt och 20% skatt” eller vad det nu skulle vara.
 - [ ] T002 · Add separate municipality tax inputs per owner, including burial fee and optional faith-community fee.
 - [ ] T003 · Add explicit Svenska kyrkan membership handling per owner instead of assuming one shared municipal-style rate.
 - [ ] T001 · Add support for planning years beyond `2026` once official constants and K10 rule details are available.
