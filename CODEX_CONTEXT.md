@@ -41,6 +41,7 @@ docker compose --env-file .env.dev run --rm test
 - `app/tax_rates.py`: official Skatteverket municipality/parish tax catalog parsing for `2025` and `2026`
 - `app/templates/index.html`: page shell
 - `app/static/app.js`: client behavior, local storage, Swedish/English i18n, actions menu, and derived local-tax summary
+- `app/static/app.js`: client behavior, local storage, Swedish/English i18n, actions menu, derived local-tax summary, and export staleness guard for embedded analysis
 - `app/static/styles.css`: UI styling
 
 ## Conventions
@@ -53,6 +54,7 @@ docker compose --env-file .env.dev run --rm test
 - The main recommendation is steerable through `optimization_profile` plus `household_min_net_income`.
 - Treat user-entered car benefit as taxable compensation that affects tax and employer contributions but not cash net salary toward the target.
 - Treat positive `periodization_fund_change` as an allocation and negative values as reversal that cannot exceed the stated opening balance.
+- Surface periodization-fund and pension-limit input errors explicitly; do not collapse them into a generic "no feasible scenario" message.
 - The visible municipal-tax field covers municipal and regional income tax. Burial fee and any church fee are handled separately from the same municipality/parish dataset.
 
 ## Critical warnings

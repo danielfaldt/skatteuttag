@@ -97,6 +97,16 @@ class PlanningInput(BaseModel):
         return self.spouse_share_percentage / 100.0
 
 
+class CalculationInputError(ValueError):
+    def __init__(self, key: str, params: dict[str, Any] | None = None) -> None:
+        self.key = key
+        self.params = params or {}
+        super().__init__(key)
+
+    def to_detail(self) -> dict[str, Any]:
+        return {"key": self.key, "params": self.params}
+
+
 @dataclass(frozen=True)
 class DividendSpaceResult:
     user_space: float
@@ -817,6 +827,33 @@ def build_split_variant(data: PlanningInput, user_share_percentage: float) -> Pl
 
 
 def plan_core(data: PlanningInput) -> dict[str, Any]:
+    zero_salary_budget = compute_company_budget(data, 0.0)
+    if not zero_salary_budget["valid"]:
+        if data.planned_user_pension > zero_salary_budget.get("pension_deduction_limit", 0) + 1:
+            raise CalculationInputError(
+                "error.pension_deduction_limit_exceeded",
+                {
+                    "requestedPension": round(data.planned_user_pension, 2),
+                    "pensionLimit": round(zero_salary_budget.get("pension_deduction_limit", 0), 2),
+                },
+            )
+        if data.periodization_fund_change > zero_salary_budget.get("max_periodization_allocation", 0) + 1:
+            raise CalculationInputError(
+                "error.periodization_allocation_too_high",
+                {
+                    "requestedAmount": round(data.periodization_fund_change, 2),
+                    "maxAmount": round(zero_salary_budget.get("max_periodization_allocation", 0), 2),
+                },
+            )
+        if abs(min(data.periodization_fund_change, 0.0)) > data.opening_periodization_fund_balance + 1:
+            raise CalculationInputError(
+                "error.periodization_reversal_too_high",
+                {
+                    "requestedAmount": round(abs(min(data.periodization_fund_change, 0.0)), 2),
+                    "openingBalance": round(data.opening_periodization_fund_balance, 2),
+                },
+            )
+
     current_employer_contribution_rate = employer_contribution_rate(data.year, data.user_birth_year)
     fixed_costs = (
         data.planned_user_pension
@@ -834,7 +871,7 @@ def plan_core(data: PlanningInput) -> dict[str, Any]:
     )
 
     if not evaluated:
-        raise ValueError("No feasible scenario could be created from the provided company profit.")
+        raise CalculationInputError("error.no_feasible_scenario_from_company_profit")
 
     medium_centers = {item["salary"] for item in sorted(evaluated, key=lambda item: recommendation_sort_key(data, item))[:8]}
     evaluated.extend(

@@ -8,7 +8,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from .annual_report import import_annual_report
-from .calculator.planner import PlanningInput, build_ownership_analysis, plan_compensation
+from .calculator.planner import CalculationInputError, PlanningInput, build_ownership_analysis, plan_compensation
 from .calculator.rules import SUPPORTED_YEARS
 from .config import settings
 from .pdf_report import generate_pdf_report
@@ -42,6 +42,8 @@ async def calculate(request: Request) -> JSONResponse:
     payload = await request.json()
     try:
         result = plan_compensation(payload, include_ownership_analysis=False)
+    except CalculationInputError as exc:
+        raise HTTPException(status_code=422, detail=exc.to_detail()) from exc
     except Exception as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     return JSONResponse(result)
@@ -52,6 +54,8 @@ async def ownership_analysis(request: Request) -> JSONResponse:
     payload = await request.json()
     try:
         result = build_ownership_analysis(payload)
+    except CalculationInputError as exc:
+        raise HTTPException(status_code=422, detail=exc.to_detail()) from exc
     except Exception as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     return JSONResponse(result)
@@ -73,6 +77,8 @@ async def export_pdf(request: Request) -> Response:
     language = payload.pop("language", "sv")
     try:
         pdf_bytes = generate_pdf_report(payload, language=language)
+    except CalculationInputError as exc:
+        raise HTTPException(status_code=422, detail=exc.to_detail()) from exc
     except Exception as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
 

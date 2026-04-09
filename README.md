@@ -18,6 +18,7 @@ The primary company input is the company result before corporate tax. The app th
 - Explicit salary-versus-dividend analysis with reasoning and nearby comparison mixes
 - Server-generated PDF export for formal review by advisors, auditors, or the user
 - JSON export/import for moving scenarios between browsers or archiving a scenario together with the latest analysis, available from the compact header actions menu
+- JSON export/import only embeds the latest analysis when it still matches the current form values, so exported files do not silently mix fresh inputs with stale results
 - Birth-year-aware personal tax and employer contribution handling
 - Adjustable ownership split between spouses, plus an indicative ownership suggestion when a different split lowers total tax
 - Additional planning inputs for salary outside the company, car benefit, occupational pension, opening periodization-fund balance, and periodization fund adjustments
@@ -86,6 +87,7 @@ docker compose --env-file .env.dev run --rm test
 - Taxable car benefit affects salary tax and employer contributions but does not count as cash net income toward the target.
 - Occupational pension is checked against the deduction envelope using the higher of the current pension base and the user's prior-year company salary.
 - Positive periodization fund amounts are treated as allocations; negative values are treated as reversals and cannot exceed the stated opening balance.
+- If a planned periodization-fund allocation exceeds what the current year result allows, the app now returns a specific validation error with the maximum allowed amount instead of a generic infeasible-scenario error.
 - The spouse's external salary only affects the spouse's tax result where dividends spill into service taxation.
 - Dividends are limited to current-year post-corporate-tax profit plus any opening retained earnings entered by the user.
 - The visible municipal-tax field models municipal and regional income tax. Burial fee and optional church fee are fetched separately from municipality and parish data.

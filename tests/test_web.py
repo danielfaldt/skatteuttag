@@ -65,6 +65,28 @@ def test_api_calculate_returns_json():
     assert payload["ownership_suggestion"] is None
 
 
+def test_api_calculate_returns_structured_periodization_error():
+    response = client.post(
+        "/api/calculate",
+        json={
+            "year": 2026,
+            "company_result_before_corporate_tax": 846_312,
+            "opening_retained_earnings": 1_051_367,
+            "spouse_external_salary": 1_500_000,
+            "user_car_benefit": 74_688,
+            "planned_user_pension": 180_000,
+            "opening_periodization_fund_balance": 650_000,
+            "prior_year_company_cash_salaries": 650_599,
+            "prior_year_user_company_salary": 650_599,
+            "periodization_fund_change": 150_000,
+        },
+    )
+    assert response.status_code == 422
+    payload = response.json()
+    assert payload["detail"]["key"] == "error.periodization_allocation_too_high"
+    assert payload["detail"]["params"]["maxAmount"] == 149_794.26
+
+
 def test_api_ownership_analysis_returns_json():
     response = client.post("/api/ownership-analysis", json={"year": 2026})
     assert response.status_code == 200
@@ -192,6 +214,9 @@ def test_client_script_persists_form_state_on_input():
     assert "field-autofilled" in body
     assert "importDataFile" in body
     assert "downloadJsonFile" in body
+    assert "formatApiErrorDetail" in body
+    assert "error.periodization_allocation_too_high" in body
+    assert "error.no_feasible_scenario_from_company_profit" in body
     assert 'id="export-data"' in client.get("/").text
     assert "actionMenu" in body
 
@@ -209,8 +234,9 @@ def test_client_script_supports_portable_data_export_and_import():
     assert '"button.importing_data"' in body
     assert '"error.import_invalid_format"' in body
     assert "function buildPortableState()" in body
+    assert "function isCurrentFormSyncedWithAnalysis()" in body
     assert "function buildExportPayload()" in body
-    assert "analysis: lastResult" in body
+    assert "analysis: isCurrentFormSyncedWithAnalysis() ? lastResult : null" in body
     assert "function applyImportedState(source)" in body
     assert "function importDataFile(file)" in body
     assert "parsed?.schema === EXPORT_SCHEMA ? parsed.form : parsed" in body

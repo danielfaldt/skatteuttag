@@ -1,4 +1,5 @@
 from app.calculator.planner import (
+    CalculationInputError,
     PlanningInput,
     build_ownership_analysis,
     compute_company_budget,
@@ -192,3 +193,28 @@ def test_plan_compensation_uses_other_salary_income_and_car_benefit_without_coun
     assert result["recommended"]["salary_tax"]["pension_fee"] > 0
     assert result["recommended"]["user_net_cash_salary"] < result["recommended"]["salary"]
     assert result["recommended"]["incremental_user_salary_tax"] > 0
+
+
+def test_plan_compensation_rejects_periodization_fund_above_allowed_maximum():
+    try:
+        plan_compensation(
+            PlanningInput(
+                year=2026,
+                company_result_before_corporate_tax=846_312,
+                opening_retained_earnings=1_051_367,
+                spouse_external_salary=1_500_000,
+                user_car_benefit=74_688,
+                planned_user_pension=180_000,
+                opening_periodization_fund_balance=650_000,
+                prior_year_company_cash_salaries=650_599,
+                prior_year_user_company_salary=650_599,
+                periodization_fund_change=150_000,
+            ).model_dump(),
+            include_ownership_analysis=False,
+        )
+    except CalculationInputError as exc:
+        assert exc.key == "error.periodization_allocation_too_high"
+        assert exc.params["maxAmount"] == 149_794.26
+        assert exc.params["requestedAmount"] == 150_000
+    else:
+        raise AssertionError("Expected CalculationInputError for excessive periodization allocation")

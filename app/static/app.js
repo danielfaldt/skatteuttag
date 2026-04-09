@@ -330,6 +330,10 @@ const TRANSLATIONS = {
     "error.import_invalid_format": "Filen kunde inte läsas. Välj en giltig export från Skatteuttag.",
     "error.annual_report_invalid_format": "Filen kunde inte läsas. Välj en giltig PDF med årsredovisningen.",
     "error.annual_report_failed": "Årsredovisningen kunde inte läsas in.",
+    "error.no_feasible_scenario_from_company_profit": "Inget genomförbart scenario kunde räknas fram från nuvarande bolagsresultat.",
+    "error.periodization_allocation_too_high": "Den planerade avsättningen till periodiseringsfond är för hög. Med nuvarande indata tillåter modellen högst {maxAmount}. Du har angett {requestedAmount}.",
+    "error.periodization_reversal_too_high": "Den planerade återföringen från periodiseringsfond är för hög. Ingående fondsaldo är {openingBalance}, men du har angett {requestedAmount}.",
+    "error.pension_deduction_limit_exceeded": "Den planerade tjänstepensionen är för hög för nuvarande underlag. Modellen tillåter högst {pensionLimit}, men du har angett {requestedPension}.",
     "status.calculating": "Beräknar rekommendation...",
     "button.calculating": "Beräknar...",
     "rule.main": "Huvudregeln",
@@ -635,6 +639,10 @@ const TRANSLATIONS = {
     "error.import_invalid_format": "The file could not be read. Choose a valid export from TaxSplit.",
     "error.annual_report_invalid_format": "The file could not be read. Choose a valid annual report PDF.",
     "error.annual_report_failed": "The annual report could not be read.",
+    "error.no_feasible_scenario_from_company_profit": "No feasible scenario could be calculated from the current company result.",
+    "error.periodization_allocation_too_high": "The planned periodization fund allocation is too high. With the current inputs the model allows at most {maxAmount}. You entered {requestedAmount}.",
+    "error.periodization_reversal_too_high": "The planned periodization fund reversal is too high. The opening balance is {openingBalance}, but you entered {requestedAmount}.",
+    "error.pension_deduction_limit_exceeded": "The planned occupational pension is too high for the current basis. The model allows at most {pensionLimit}, but you entered {requestedPension}.",
     "status.calculating": "Calculating recommendation...",
     "button.calculating": "Calculating...",
     "rule.main": "Main rule",
@@ -764,6 +772,34 @@ function buildPortableState() {
   };
 }
 
+function normalizeAnalysisComparableValue(value) {
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? value : 0;
+  }
+  if (typeof value === "boolean") {
+    return value;
+  }
+  if (value === null || value === undefined) {
+    return "";
+  }
+  return String(value);
+}
+
+function isCurrentFormSyncedWithAnalysis() {
+  if (!lastResult || !lastResult.input || typeof lastResult.input !== "object") {
+    return false;
+  }
+
+  const formState = buildPortableState();
+  const analysisInput = lastResult.input;
+  return Object.keys(window.APP_DEFAULTS).every((key) => {
+    if (key.startsWith("_")) {
+      return true;
+    }
+    return normalizeAnalysisComparableValue(formState[key]) === normalizeAnalysisComparableValue(analysisInput[key]);
+  });
+}
+
 function buildExportPayload() {
   return {
     schema: EXPORT_SCHEMA,
@@ -772,8 +808,18 @@ function buildExportPayload() {
     app_name: t("brand.app_name"),
     language: currentLanguage,
     form: buildPortableState(),
-    analysis: lastResult,
+    analysis: isCurrentFormSyncedWithAnalysis() ? lastResult : null,
   };
+}
+
+function formatApiErrorDetail(detail, fallbackKey) {
+  if (detail && typeof detail === "object" && detail.key) {
+    return t(detail.key, detail.params || {});
+  }
+  if (typeof detail === "string" && detail.trim()) {
+    return detail;
+  }
+  return t(fallbackKey);
 }
 
 function sanitizeImportedState(rawState) {
@@ -1273,7 +1319,7 @@ async function fetchTaxCatalog(year) {
   const response = await fetch(`/api/municipal-tax/${year}`);
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(error.detail || t("error.calculation_failed"));
+    throw new Error(formatApiErrorDetail(error.detail, "error.calculation_failed"));
   }
 
   const payload = await response.json();
@@ -2052,7 +2098,7 @@ async function fetchOwnershipAnalysis(payload) {
 
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(error.detail || t("error.calculation_failed"));
+    throw new Error(formatApiErrorDetail(error.detail, "error.calculation_failed"));
   }
 
   return response.json();
@@ -2074,7 +2120,7 @@ async function exportPdf() {
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.detail || t("error.export_failed"));
+      throw new Error(formatApiErrorDetail(error.detail, "error.export_failed"));
     }
 
     const blob = await response.blob();
@@ -2164,7 +2210,7 @@ async function submitForm() {
   if (!response.ok) {
     const error = await response.json();
     clearLoadingState();
-    throw new Error(error.detail || t("error.calculation_failed"));
+    throw new Error(formatApiErrorDetail(error.detail, "error.calculation_failed"));
   }
 
   const result = await response.json();
