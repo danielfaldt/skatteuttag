@@ -132,7 +132,7 @@ const TRANSLATIONS = {
     "field.opening_retained_earnings_hint": "Ange utdelningsbart fritt eget kapital från senast fastställda bokslut. Årets resultat anges separat ovan.",
     "info.company_result_before_corporate_tax": "Det här är årets resultat innan bolagsskatt och innan en ny avsättning till periodiseringsfond i appen. Om årsredovisningen visar bokslutsdispositioner ska du normalt utgå från raden resultat efter finansiella poster. Raden resultat före skatt kan annars bli för låg här om periodiseringsfonden redan dragits av där. Har du en aktuell resultatrapport är den ofta ännu bättre som underlag.",
     "info.opening_retained_earnings": "Det här är fria vinstmedel från tidigare år som redan får delas ut enligt senast fastställda bokslut. I årsredovisningen hittar du dem normalt i balansräkningen eller i förändringen av eget kapital, ofta som balanserad vinst eller annat fritt eget kapital. Sätt inte detta till noll om bolaget redan har utdelningsbara vinstmedel från tidigare år.",
-    "info.periodization_fund_change": "Ange ett positivt belopp om du vill göra en ny avsättning i år och skjuta en del av årets vinst framåt. Ange ett negativt belopp om du vill återföra en tidigare periodiseringsfond till beskattning i år. Lägg inte in förra årets redan bokförda avsättning här en gång till; den hör i stället hemma i ingående saldo om den fortfarande finns kvar.",
+    "info.periodization_fund_change": "Ange ett positivt belopp om du vill göra en ny avsättning i år och skjuta en del av årets vinst framåt. Ange ett negativt belopp om du vill återföra en tidigare periodiseringsfond till beskattning i år. En ny avsättning får normalt högst vara 25 % av årets skattemässiga resultat före avsättningen. I appen räknas det taket efter vald lön, arbetsgivaravgifter, bilförmån, tjänstepension och särskild löneskatt på pension. Lägg inte in förra årets redan bokförda avsättning här en gång till; den hör i stället hemma i ingående saldo om den fortfarande finns kvar.",
     "info.prior_year_company_cash_salaries": "Det här är bolagets totala kontanta löner under lönebasåret. Det hämtas oftast inte direkt från årsredovisningen utan från lönerapporter, arbetsgivardeklarationer eller bokföringens lönekonton för året.",
     "info.prior_year_user_company_salary": "Det här är din egen kontanta lön från bolaget under lönebasåret. Den hittar du normalt i lönebesked, arbetsgivardeklarationer eller en lönesammanställning för året, snarare än direkt i årsredovisningen.",
     "info.municipal_tax_rate": "Fältet autoifylls med kommunal och regional inkomstskatt från vald kommun. Begravningsavgift och eventuell kyrkoavgift hanteras separat i beräkningen. Du kan fortfarande ändra den synliga procentsatsen manuellt.",
@@ -441,7 +441,7 @@ const TRANSLATIONS = {
     "field.opening_retained_earnings_hint": "Use the distributable retained earnings from the latest adopted accounts. Current-year profit is entered separately above.",
     "info.company_result_before_corporate_tax": "This is the year's profit before corporate tax and before any new periodization-fund allocation inside the app. If the annual accounts include appropriations, you should usually start from profit after financial items. Profit before tax can otherwise be too low here if a periodization-fund allocation has already been deducted there. A current profit report is often an even better source.",
     "info.opening_retained_earnings": "This is distributable retained profit from earlier years according to the latest adopted annual accounts. In annual accounts you usually find it in the balance sheet or in the change in equity, often labelled retained earnings or other unrestricted equity. Do not leave this at zero if the company already has distributable retained earnings from earlier years.",
-    "info.periodization_fund_change": "Use a positive amount if you want to make a new allocation this year and move part of the year's profit forward. Use a negative amount if you want to bring an earlier periodization fund back into taxation this year. Do not enter last year's already booked allocation here again; if it still exists, it belongs in the opening balance instead.",
+    "info.periodization_fund_change": "Use a positive amount if you want to make a new allocation this year and move part of the year's profit forward. Use a negative amount if you want to bring an earlier periodization fund back into taxation this year. A new allocation can normally be no more than 25% of the year's taxable profit before the allocation itself. In the app that cap is calculated after the selected salary, employer contributions, car benefit, occupational pension, and special payroll tax on pension. Do not enter last year's already booked allocation here again; if it still exists, it belongs in the opening balance instead.",
     "info.prior_year_company_cash_salaries": "This is the company's total cash salary paid in the salary-base year. It usually comes from payroll reports, employer declarations, or salary accounts in the bookkeeping rather than directly from the annual report.",
     "info.prior_year_user_company_salary": "This is your own cash salary from the company in the salary-base year. You usually find it in payroll statements, employer declarations, or a yearly salary summary rather than directly in the annual report.",
     "info.municipal_tax_rate": "The field auto-fills municipal and regional income tax from the selected municipality. Burial fee and any church fee are handled separately in the calculation. You can still edit the visible rate manually.",
@@ -701,6 +701,14 @@ function formatCurrency(value) {
   }).format(value || 0);
 }
 
+function formatMoneyValue(value) {
+  const numeric = Number(value || 0);
+  return `${new Intl.NumberFormat(currentLanguage === "sv" ? "sv-SE" : "en-US", {
+    minimumFractionDigits: Number.isInteger(numeric) ? 0 : 2,
+    maximumFractionDigits: 2,
+  }).format(numeric)} kr`;
+}
+
 function getTranslation(key) {
   return TRANSLATIONS[currentLanguage][key] || TRANSLATIONS.en[key] || key;
 }
@@ -814,10 +822,38 @@ function buildExportPayload() {
 
 function formatApiErrorDetail(detail, fallbackKey) {
   if (detail && typeof detail === "object" && detail.key) {
-    return t(detail.key, detail.params || {});
+    const params = { ...(detail.params || {}) };
+    const moneyKeys = new Set(["requestedAmount", "maxAmount", "openingBalance", "requestedPension", "pensionLimit"]);
+    Object.keys(params).forEach((key) => {
+      if (moneyKeys.has(key) && typeof params[key] === "number") {
+        params[key] = formatMoneyValue(params[key]);
+      }
+    });
+    return t(detail.key, params);
   }
   if (typeof detail === "string" && detail.trim()) {
     return detail;
+  }
+  return t(fallbackKey);
+}
+
+function normalizeErrorMessage(message, fallbackKey = "error.calculation_failed") {
+  if (message instanceof Error) {
+    return normalizeErrorMessage(message.message, fallbackKey);
+  }
+  if (typeof message === "string" && message.trim()) {
+    return message;
+  }
+  if (message && typeof message === "object") {
+    if (message.key) {
+      return t(message.key, message.params || {});
+    }
+    if (message.detail !== undefined) {
+      return normalizeErrorMessage(message.detail, fallbackKey);
+    }
+    if (message.message !== undefined) {
+      return normalizeErrorMessage(message.message, fallbackKey);
+    }
   }
   return t(fallbackKey);
 }
@@ -1705,7 +1741,7 @@ function renderProblemSignals(result) {
 function renderFinalPlan(result) {
   const recommendation = result.recommended;
   const suggestion = result.ownership_suggestion;
-  const ownershipPending = result.ownership_suggestion === undefined;
+  const ownershipPending = Boolean(result.ownership_analysis_pending);
   const userShare = suggestion ? suggestion.suggested_user_share_percentage : result.input.user_share_percentage;
   const spouseShare = suggestion ? suggestion.suggested_spouse_share_percentage : (100 - result.input.user_share_percentage);
   const summaryKey = ownershipPending
@@ -1811,12 +1847,27 @@ function renderCompensationMixAnalysis(result) {
 
 function renderOwnershipSuggestion(result) {
   const suggestion = result.ownership_suggestion;
+  const ownershipPending = Boolean(result.ownership_analysis_pending);
   const currentSplit = t("ownership.current_split", {
     userName: getOwnerName("user"),
     spouseName: getOwnerName("spouse"),
     userSharePercentage: formatInputValue(result.input.user_share_percentage, "percent"),
     spouseSharePercentage: formatInputValue(100 - result.input.user_share_percentage, "percent"),
   });
+
+  if (ownershipPending) {
+    ownershipSuggestionBox.innerHTML = `
+      <div class="note ownership-loading">
+        <div class="loading-header">
+          <span class="loading-spinner" aria-hidden="true"></span>
+          <strong>${t("ownership.loading_title")}</strong>
+        </div>
+        <div>${t("ownership.loading")}</div>
+        <div class="loading-detail">${t("ownership.loading_detail")}</div>
+      </div>
+    `;
+    return;
+  }
 
   if (!suggestion) {
     ownershipSuggestionBox.innerHTML = `
@@ -2047,7 +2098,7 @@ function renderAssumptions(result) {
 }
 
 function setError(message) {
-  errorBox.textContent = message;
+  errorBox.textContent = normalizeErrorMessage(message);
   errorBox.classList.remove("hidden");
 }
 
@@ -2232,7 +2283,11 @@ async function submitForm() {
       if (requestId !== activeSubmitRequestId) {
         return;
       }
-      lastResult = { ...result, ownership_suggestion: ownershipResult.ownership_suggestion };
+      lastResult = {
+        ...result,
+        ownership_analysis_pending: false,
+        ownership_suggestion: ownershipResult.ownership_suggestion,
+      };
       renderProblemSignals(lastResult);
       renderFinalPlan(lastResult);
       renderOwnershipSuggestion(lastResult);
@@ -2241,8 +2296,8 @@ async function submitForm() {
       if (requestId !== activeSubmitRequestId) {
         return;
       }
-      renderOwnershipSuggestion(result);
-      setError(error.message || t("error.calculation_failed"));
+      renderOwnershipSuggestion({ ...result, ownership_analysis_pending: false });
+      setError(error);
     });
 }
 
@@ -2254,7 +2309,7 @@ yearInput.addEventListener("change", (event) => {
     municipality: taxMunicipalitySelect.value,
     parish: taxParishSelect.value,
     forceAutofill: true,
-  }).then(saveState).catch((error) => setError(error.message));
+  }).then(saveState).catch((error) => setError(error));
 });
 
 form.addEventListener("input", saveStateIfFormField);
@@ -2362,14 +2417,14 @@ form.addEventListener("change", (event) => {
 });
 
 exportPdfButton.addEventListener("click", () => {
-  exportPdf().catch((error) => setError(error.message));
+  exportPdf().catch((error) => setError(error));
 });
 
 exportDataButton.addEventListener("click", () => {
   try {
     exportData();
   } catch (error) {
-    setError(error.message);
+    setError(error);
   }
 });
 
@@ -2378,7 +2433,7 @@ importAnnualReportButton.addEventListener("click", () => {
 });
 
 importAnnualReportFileInput.addEventListener("change", () => {
-  importAnnualReportFile(importAnnualReportFileInput.files?.[0]).catch((error) => setError(error.message));
+  importAnnualReportFile(importAnnualReportFileInput.files?.[0]).catch((error) => setError(error));
 });
 
 importDataButton.addEventListener("click", () => {
@@ -2386,7 +2441,7 @@ importDataButton.addEventListener("click", () => {
 });
 
 importDataFileInput.addEventListener("change", () => {
-  importDataFile(importDataFileInput.files?.[0]).catch((error) => setError(error.message));
+  importDataFile(importDataFileInput.files?.[0]).catch((error) => setError(error));
 });
 
 document.addEventListener("click", (event) => {
@@ -2422,7 +2477,7 @@ form.addEventListener("submit", async (event) => {
   try {
     await submitForm();
   } catch (error) {
-    setError(error.message);
+    setError(error);
   }
 });
 
@@ -2432,7 +2487,7 @@ resetButton.addEventListener("click", () => {
   annualReportImportState = null;
   applyAnnualReportFieldMarkers();
   renderAnnualReportStatus();
-  restoreState().then(() => submitForm().catch((error) => setError(error.message)));
+  restoreState().then(() => submitForm().catch((error) => setError(error)));
 });
 
 async function init() {
@@ -2442,4 +2497,4 @@ async function init() {
   await submitForm();
 }
 
-init().catch((error) => setError(error.message));
+init().catch((error) => setError(error));

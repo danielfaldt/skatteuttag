@@ -47,8 +47,8 @@ def test_index_renders():
     assert 'id="local-tax-summary"' in response.text
     assert 'id="burial-fee-rate"' in response.text
     assert 'id="church-fee-rate"' in response.text
-    assert 'href="/static/styles.css"' in response.text
-    assert 'src="/static/app.js"' in response.text
+    assert 'href="/static/styles.css?v=' in response.text
+    assert 'src="/static/app.js?v=' in response.text
     assert 'class="info-popover"' in response.text
     assert 'data-i18n="info.opening_retained_earnings"' in response.text
     assert 'class="field-grid base-grid"' in response.text
@@ -62,6 +62,7 @@ def test_api_calculate_returns_json():
     assert "compensation_mix" in payload
     assert "problems" in payload
     assert "summary" in payload["compensation_mix"]
+    assert payload["ownership_analysis_pending"] is True
     assert payload["ownership_suggestion"] is None
 
 
@@ -147,10 +148,12 @@ def test_client_script_persists_form_state_on_input():
     assert "resultat efter finansiella poster" in body
     assert "resultat före skatt kan annars bli för låg här" in body
     assert "info.periodization_fund_change" in body
+    assert "25 % av årets skattemässiga resultat före avsättningen" in body
     assert "förra årets redan bokförda avsättning" in body
     assert "arbetsgivardeklarationer eller bokföringens lönekonton" in body
     assert "ownership.loading_title" in body
     assert "ownership-loading" in body
+    assert "ownership_analysis_pending" in body
     assert "let activeSubmitRequestId = 0;" in body
     assert "clearLoadingState();" in body
     assert "fetchOwnershipAnalysis(payload)" in body
@@ -215,6 +218,8 @@ def test_client_script_persists_form_state_on_input():
     assert "importDataFile" in body
     assert "downloadJsonFile" in body
     assert "formatApiErrorDetail" in body
+    assert "formatMoneyValue" in body
+    assert "normalizeErrorMessage" in body
     assert "error.periodization_allocation_too_high" in body
     assert "error.no_feasible_scenario_from_company_profit" in body
     assert 'id="export-data"' in client.get("/").text
@@ -237,6 +242,7 @@ def test_client_script_supports_portable_data_export_and_import():
     assert "function isCurrentFormSyncedWithAnalysis()" in body
     assert "function buildExportPayload()" in body
     assert "analysis: isCurrentFormSyncedWithAnalysis() ? lastResult : null" in body
+    assert 'exportPdf().catch((error) => setError(error));' in body
     assert "function applyImportedState(source)" in body
     assert "function importDataFile(file)" in body
     assert "parsed?.schema === EXPORT_SCHEMA ? parsed.form : parsed" in body

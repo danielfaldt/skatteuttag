@@ -1004,6 +1004,7 @@ def plan_compensation(payload: dict[str, Any], *, include_ownership_analysis: bo
     compensation_mix = planned["compensation_mix"]
     search_meta = planned["search_meta"]
     salary_basis_year = DIVIDEND_RULES[data.year].salary_basis_year
+    ownership_analysis_pending = not include_ownership_analysis
     ownership_suggestion = suggest_ownership_split(data) if include_ownership_analysis else None
     profile_explanation_key = {
         "target_then_tax": "explanation.recommendation_profile_target_then_tax",
@@ -1024,6 +1025,7 @@ def plan_compensation(payload: dict[str, Any], *, include_ownership_analysis: bo
         "alternatives": alternatives,
         "compensation_mix": compensation_mix,
         "problems": build_problem_signals(data, recommended, search_meta),
+        "ownership_analysis_pending": ownership_analysis_pending,
         "ownership_suggestion": ownership_suggestion,
         "assumptions": [
             {
