@@ -1477,6 +1477,11 @@ function renderOwnershipSuggestion(result) {
       </div>
       <div>${t("ownership.optimized_for_household")}</div>
       <div>${t("ownership.optimized_comparison_intro")}</div>
+      <div class="mix-household-note">
+        <strong>${t("ownership.reading_guide_title")}</strong>
+        <p>${t("ownership.reading_guide_body")}</p>
+        <p>${t("ownership.manual_recalc")}</p>
+      </div>
       <div class="mix-stat-grid ownership-stat-grid">
         <div class="mix-stat">
           <span>${t("ownership.household_net_gain_label")}</span>
@@ -1502,6 +1507,7 @@ function renderOwnershipSuggestion(result) {
       ${taxImpactText}<br>
       <div class="ownership-same-plan">
         <strong>${t("ownership.same_plan_title")}</strong><br>
+        ${t("ownership.same_plan_explainer")}<br>
         ${samePlanHouseholdText}<br>
         ${samePlanTaxText}<br>
         ${t(samePlanGuidanceKey)}
