@@ -1475,9 +1475,8 @@ function renderLocalTaxSummary() {
 
 function applyMunicipalTaxAutofill({ force = false } = {}) {
   const municipality = selectedMunicipalityRecord();
-  syncLocalTaxComponentInputs();
-
   if (municipalTaxManualOverride && !force) {
+    syncLocalTaxComponentInputs();
     return;
   }
   const yearDefaults = YEAR_DEFAULTS[Number(yearInput.value)] || YEAR_DEFAULTS[2026];
@@ -1488,6 +1487,7 @@ function applyMunicipalTaxAutofill({ force = false } = {}) {
   applyingMunicipalTaxRate = true;
   municipalTaxRateInput.value = formatInputValue(localIncomeTax, "percent");
   applyingMunicipalTaxRate = false;
+  syncLocalTaxComponentInputs();
 }
 
 async function syncMunicipalTaxSelectors({ year, municipality, parish, forceAutofill = false } = {}) {

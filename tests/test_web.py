@@ -206,6 +206,8 @@ def test_client_script_persists_form_state_on_input():
     assert "municipalTaxManualOverride" in body
     assert "syncLocalTaxComponentInputs" in body
     assert "renderLocalTaxSummary" in body
+    assert 'municipalTaxRateInput.value = formatInputValue(localIncomeTax, "percent");' in body
+    assert 'applyingMunicipalTaxRate = false;\n  syncLocalTaxComponentInputs();' in body
     assert "field.local_tax_total" in body
     assert "field.local_tax_detail_church" in body
     assert "burial-fee-rate" in client.get("/").text
