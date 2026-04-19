@@ -2,11 +2,11 @@
 
 ## Purpose
 
-Skatteuttag is a Docker Compose based FastAPI web app for Swedish salary and dividend planning in a two-owner spouse setup with configurable ownership percentages, birth years, salary-linked dividend room, adjustable optimization profiles, optional household-net floor, compensation-mix analysis, car benefit, occupational pension, year-split opening periodization funds, municipality/parish based tax auto-fill, a derived total-local-tax display, a compact header actions menu, server-generated PDF export, and JSON export/import of scenarios with embedded analysis snapshots.
+TaxSplit is a Docker Compose based FastAPI web app for Swedish salary and dividend planning in a two-owner spouse setup with configurable ownership percentages, birth years, salary-linked dividend room, adjustable optimization profiles, optional household-net floor, compensation-mix analysis, car benefit, occupational pension, year-split opening periodization funds, municipality/parish based tax auto-fill, a derived total-local-tax display, a compact header actions menu, server-generated PDF export, and JSON export/import of scenarios with embedded analysis snapshots. The Swedish UI name is `Skatteplaneraren`.
 
 ## Scope
 
-- Everything must stay inside `/home/daniel/src/skatteuttag`.
+- Everything must stay inside `/home/daniel/src/taxsplit`.
 - Development and dev deployment only.
 - Production must never be touched without a direct, specific order.
 - Any future production work must back up both database and code before changes.

@@ -1,6 +1,6 @@
-# Skatteuttag
+# TaxSplit
 
-Skatteuttag is a developer-focused web application for Swedish compensation planning in a private limited company context. It models salary and dividend extraction for a company owned by spouses, where only the user receives salary from the company and the spouse has salary income from another employer.
+TaxSplit is a developer-focused web application for Swedish compensation planning in a private limited company context. It models salary and dividend extraction for a company owned by spouses, where only the user receives salary from the company and the spouse has salary income from another employer. The Swedish UI name is `Skatteplaneraren`.
 
 The app takes one planning year as the controlling input and derives the relevant rule years from that choice. Salary tax is computed for the selected year, while the wage-linked part of the dividend room uses the salary-base year that legally feeds into that planning year.
 

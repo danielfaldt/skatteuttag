@@ -1,6 +1,10 @@
 {
   "brand.app_name": "TaxSplit",
   "meta.description": "Salary and dividend planning for a Swedish limited company with transparent year-based tax logic.",
+  "theme.label": "Theme",
+  "theme.light": "Light",
+  "theme.dark": "Dark",
+  "theme.system": "System",
   "language.label": "Language",
   "button.actions": "Actions",
   "button.import_annual_report": "Read annual report",

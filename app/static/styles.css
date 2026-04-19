@@ -12,6 +12,19 @@
   --radius: 20px;
 }
 
+:root[data-theme="dark"] {
+  --bg: #0f1513;
+  --paper: rgba(20, 28, 25, 0.94);
+  --paper-strong: #17211d;
+  --text: #edf5f1;
+  --muted: #a8beb5;
+  --line: #2a3a34;
+  --accent: #6fd0ae;
+  --accent-soft: rgba(111, 208, 174, 0.14);
+  --danger: #ff9086;
+  --shadow: 0 18px 48px rgba(0, 0, 0, 0.3);
+}
+
 * {
   box-sizing: border-box;
 }
@@ -23,6 +36,12 @@ body {
     radial-gradient(circle at top right, rgba(29, 122, 99, 0.09), transparent 28%),
     linear-gradient(180deg, #f8fbfa 0%, var(--bg) 100%);
   color: var(--text);
+}
+
+:root[data-theme="dark"] body {
+  background:
+    radial-gradient(circle at top right, rgba(111, 208, 174, 0.12), transparent 28%),
+    linear-gradient(180deg, #111917 0%, var(--bg) 100%);
 }
 
 .shell {
@@ -170,12 +189,14 @@ body {
   cursor: wait;
 }
 
+.theme-switch,
 .language-switch {
   display: inline-flex;
   align-items: center;
   gap: 10px;
 }
 
+.theme-switch select,
 .language-switch select {
   border: 0;
   background: transparent;

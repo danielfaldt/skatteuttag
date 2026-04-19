@@ -3,7 +3,7 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "skatteuttag"
+name = "taxsplit"
 version = "0.1.0"
 description = "Swedish salary and dividend planning for owner-managed limited companies."
 readme = "README.md"

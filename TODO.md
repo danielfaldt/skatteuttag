@@ -23,7 +23,7 @@
 
 - [x] T018 · Vi vill ju inte länsa bolaget. Egentligen vill vi nog helst ligga under 20%-skattegränsen (eller 2/3 30%). Just nu känns det som att vi försöker länsa bolaget på medel istället för att ta ut lagom för ändamålet och målet. Finns heller inget alternativ för ”under statlig inkomstskatt och 20% skatt” eller vad det nu skulle vara.
 - [x] T016 · Implement a function for exporting and importing data in JSON format along with the entire analysis if existing.
-- [x] T017 · Fix the syntax error in the calculation and clarify any misunderstandings or typos. See attachment. User input error or calc error? Anyhow, the end result is wrong. [ss://skatteuttag/screenshots/img_1876-w8xo8k.jpeg]
+- [x] T017 · Fix the syntax error in the calculation and clarify any misunderstandings or typos. See attachment. User input error or calc error? Anyhow, the end result is wrong. [ss://taxsplit/screenshots/img_1876-w8xo8k.jpeg]
 - [x] T013 · Ägarfördelning jämförs i bakgrunden -> Även indikerat på "Slutgiltigt förslag" att den inte är färdigbehandlad. Formulera om denna även.
 - [x] T014 · Styrparametrarna ska kunna justeras. Maximalt uttag/minimal skatt, minsta ”löneuttag netto” (inkl utdelning för båda) etc. Finns några begränsningar som slagit i? Typ max vinstuttag eller liknande.
 - [x] T015 · Förklara hur analysen gjord och vilka parametrar som styrde. Lättbegripligt språk. Ändå tydligt. Gör detta för varje analys som görs. Vanlig svenska.

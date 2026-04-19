@@ -16,7 +16,7 @@ from .calculator.planner import plan_compensation
 
 COPY: dict[str, dict[str, str]] = {
     "sv": {
-        "title": "Skatteuttag",
+        "title": "Skatteplaneraren",
         "subtitle": "Formell planeringsrapport för lön, utdelning och skatt",
         "generated": "Genererad",
         "section_inputs": "1. Indata",
@@ -434,7 +434,7 @@ def generate_pdf_report(payload: dict[str, Any], language: str = "sv") -> bytes:
         topMargin=18 * mm,
         bottomMargin=18 * mm,
         title=copy["title"],
-        author="Skatteuttag",
+        author="Skatteplaneraren",
     )
 
     story: list[Any] = [

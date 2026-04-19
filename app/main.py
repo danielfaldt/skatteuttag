@@ -108,7 +108,7 @@ async def export_pdf(request: Request) -> Response:
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",
-        headers={"Content-Disposition": 'attachment; filename="skatteuttag-report.pdf"'},
+        headers={"Content-Disposition": 'attachment; filename="taxsplit-report.pdf"'},
     )
 
 

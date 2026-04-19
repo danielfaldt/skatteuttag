@@ -1,9 +1,14 @@
-const STORAGE_KEY = "skatteuttag-form-state";
-const LANGUAGE_KEY = "skatteuttag-language";
+const STORAGE_KEY = "taxsplit-form-state";
+const LEGACY_STORAGE_KEY = "skatteuttag-form-state";
+const LANGUAGE_KEY = "taxsplit-language";
+const LEGACY_LANGUAGE_KEY = "skatteuttag-language";
+const THEME_KEY = "taxsplit-theme";
+const LEGACY_THEME_KEY = "skatteuttag-theme";
 
 const form = document.querySelector("#planner-form");
 const yearInput = document.querySelector("#year");
 const languageSwitch = document.querySelector("#language-switch");
+const themeSwitch = document.querySelector("#theme-switch");
 const availableLanguageCodes = Array.from(languageSwitch.options).map((option) => option.value);
 const actionMenu = document.querySelector("#action-menu");
 const importAnnualReportButton = document.querySelector("#import-annual-report");
@@ -60,7 +65,8 @@ const userShareCostBasisLabel = document.querySelector("#user-share-cost-basis-l
 const spouseShareCostBasisLabel = document.querySelector("#spouse-share-cost-basis-label");
 const numericInputs = Array.from(document.querySelectorAll(".js-number"));
 const infoPopovers = Array.from(document.querySelectorAll(".info-popover"));
-const EXPORT_SCHEMA = "skatteuttag-planning-export";
+const EXPORT_SCHEMA = "taxsplit-planning-export";
+const LEGACY_EXPORT_SCHEMA = "skatteuttag-planning-export";
 const EXPORT_VERSION = 1;
 
 let TRANSLATIONS = {};
@@ -97,9 +103,16 @@ const YEAR_DEFAULTS = {
   2026: { municipalTaxRate: 32.38, burialFeeRate: 0.292 },
 };
 
-let currentLanguage = availableLanguageCodes.includes(localStorage.getItem(LANGUAGE_KEY) || "")
-  ? (localStorage.getItem(LANGUAGE_KEY) || "sv")
+function getStoredValue(primaryKey, legacyKey) {
+  return localStorage.getItem(primaryKey) ?? localStorage.getItem(legacyKey);
+}
+
+let currentLanguage = availableLanguageCodes.includes(getStoredValue(LANGUAGE_KEY, LEGACY_LANGUAGE_KEY) || "")
+  ? (getStoredValue(LANGUAGE_KEY, LEGACY_LANGUAGE_KEY) || "sv")
   : "sv";
+let currentThemePreference = ["light", "dark", "system"].includes(getStoredValue(THEME_KEY, LEGACY_THEME_KEY) || "")
+  ? (getStoredValue(THEME_KEY, LEGACY_THEME_KEY) || "light")
+  : "light";
 let lastResult = null;
 let activeSubmitRequestId = 0;
 let taxCatalog = new Map();
@@ -157,6 +170,9 @@ function formatDisplayName(value) {
 function applyStaticTranslations() {
   document.documentElement.lang = currentLanguage;
   languageSwitch.value = currentLanguage;
+  if (themeSwitch) {
+    themeSwitch.value = currentThemePreference;
+  }
   document.querySelectorAll("[data-i18n]").forEach((element) => {
     const params = element.dataset.i18nVars ? JSON.parse(element.dataset.i18nVars) : {};
     element.textContent = t(element.dataset.i18n, params);
@@ -173,8 +189,25 @@ function applyStaticTranslations() {
   }
 }
 
+function resolvedTheme(preference = currentThemePreference) {
+  if (preference === "system") {
+    return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches
+      ? "dark"
+      : "light";
+  }
+  return preference === "dark" ? "dark" : "light";
+}
+
+function applyTheme(preference = currentThemePreference) {
+  currentThemePreference = ["light", "dark", "system"].includes(preference) ? preference : "light";
+  document.documentElement.dataset.theme = resolvedTheme(currentThemePreference);
+  if (themeSwitch) {
+    themeSwitch.value = currentThemePreference;
+  }
+}
+
 function readSavedState() {
-  const saved = localStorage.getItem(STORAGE_KEY);
+  const saved = getStoredValue(STORAGE_KEY, LEGACY_STORAGE_KEY);
   if (!saved) {
     return { ...window.APP_DEFAULTS };
   }
@@ -985,6 +1018,7 @@ function saveState() {
     STORAGE_KEY,
     JSON.stringify(buildPortableState()),
   );
+  localStorage.removeItem(LEGACY_STORAGE_KEY);
 }
 
 function downloadJsonFile(filename, payload) {
@@ -1001,13 +1035,14 @@ function downloadJsonFile(filename, payload) {
 
 function buildExportFilename() {
   const datePart = new Date().toISOString().slice(0, 10);
-  return `skatteuttag-${datePart}.json`;
+  return `taxsplit-${datePart}.json`;
 }
 
 async function applyImportedState(source) {
   const imported = sanitizeImportedState(source);
   municipalTaxManualOverride = Boolean(imported._municipal_tax_manual_override);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(imported));
+  localStorage.removeItem(LEGACY_STORAGE_KEY);
   annualReportImportState = null;
   applyAnnualReportFieldMarkers();
   renderAnnualReportStatus();
@@ -1017,6 +1052,7 @@ async function applyImportedState(source) {
   ) {
     currentLanguage = imported.language;
     localStorage.setItem(LANGUAGE_KEY, currentLanguage);
+    localStorage.removeItem(LEGACY_LANGUAGE_KEY);
     await ensureTranslationsLoaded(currentLanguage);
     applyStaticTranslations();
   }
@@ -1725,7 +1761,7 @@ async function exportPdf() {
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
     anchor.href = url;
-    anchor.download = "skatteuttag-report.pdf";
+    anchor.download = "taxsplit-report.pdf";
     document.body.append(anchor);
     anchor.click();
     anchor.remove();
@@ -1768,16 +1804,19 @@ async function importDataFile(file) {
   try {
     const raw = await file.text();
     const parsed = JSON.parse(raw);
-    const importedForm = parsed?.schema === EXPORT_SCHEMA ? parsed.form : parsed;
+    const importedSchema = parsed?.schema;
+    const isPortableExport = importedSchema === EXPORT_SCHEMA || importedSchema === LEGACY_EXPORT_SCHEMA;
+    const importedForm = isPortableExport ? parsed.form : parsed;
 
-    if (parsed?.schema === EXPORT_SCHEMA && parsed.language && ["sv", "en"].includes(parsed.language)) {
+    if (isPortableExport && parsed.language && ["sv", "en"].includes(parsed.language)) {
       currentLanguage = parsed.language;
       localStorage.setItem(LANGUAGE_KEY, currentLanguage);
+      localStorage.removeItem(LEGACY_LANGUAGE_KEY);
       applyStaticTranslations();
     }
 
     await applyImportedState(importedForm);
-    lastResult = parsed?.schema === EXPORT_SCHEMA && parsed.analysis ? parsed.analysis : null;
+    lastResult = isPortableExport && parsed.analysis ? parsed.analysis : null;
     syncRecommendedSubtitle(lastResult);
     await submitForm();
   } catch (error) {
@@ -1951,6 +1990,7 @@ userShareSlider.addEventListener("input", () => {
 languageSwitch.addEventListener("change", async (event) => {
   currentLanguage = event.target.value;
   localStorage.setItem(LANGUAGE_KEY, currentLanguage);
+  localStorage.removeItem(LEGACY_LANGUAGE_KEY);
   await ensureTranslationsLoaded(currentLanguage);
   applyStaticTranslations();
   syncRecommendedSubtitle(lastResult);
@@ -1972,6 +2012,30 @@ languageSwitch.addEventListener("change", async (event) => {
     renderAssumptions(lastResult);
   }
 });
+
+if (themeSwitch) {
+  themeSwitch.addEventListener("change", (event) => {
+    currentThemePreference = event.target.value;
+    localStorage.setItem(THEME_KEY, currentThemePreference);
+    localStorage.removeItem(LEGACY_THEME_KEY);
+    applyTheme(currentThemePreference);
+  });
+}
+
+if (window.matchMedia) {
+  const systemThemeQuery = window.matchMedia("(prefers-color-scheme: dark)");
+  const syncSystemTheme = () => {
+    if (currentThemePreference === "system") {
+      applyTheme(currentThemePreference);
+    }
+  };
+
+  if (typeof systemThemeQuery.addEventListener === "function") {
+    systemThemeQuery.addEventListener("change", syncSystemTheme);
+  } else if (typeof systemThemeQuery.addListener === "function") {
+    systemThemeQuery.addListener(syncSystemTheme);
+  }
+}
 
 form.addEventListener("change", (event) => {
   if (event.target?.name === "optimization_profile") {
@@ -2046,6 +2110,7 @@ form.addEventListener("submit", async (event) => {
 
 resetButton.addEventListener("click", () => {
   localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem(LEGACY_STORAGE_KEY);
   municipalTaxManualOverride = false;
   annualReportImportState = null;
   applyAnnualReportFieldMarkers();
@@ -2055,6 +2120,7 @@ resetButton.addEventListener("click", () => {
 
 async function init() {
   await ensureTranslationsLoaded();
+  applyTheme(currentThemePreference);
   applyStaticTranslations();
   await restoreState();
   syncRecommendedSubtitle();

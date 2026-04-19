@@ -9,7 +9,7 @@ client = TestClient(app)
 def test_index_renders():
     response = client.get("/")
     assert response.status_code == 200
-    assert "Skatteuttag" in response.text
+    assert "Skatteplaneraren" in response.text
     assert 'id="language-switch"' in response.text
     assert 'id="action-menu"' in response.text
     assert 'id="import-annual-report"' in response.text
@@ -217,7 +217,8 @@ def test_client_script_supports_portable_data_export_and_import():
     sv_body = client.get("/static/i18n/sv.json").text
     en_body = client.get("/static/i18n/en.json").text
 
-    assert 'const EXPORT_SCHEMA = "skatteuttag-planning-export";' in body
+    assert 'const EXPORT_SCHEMA = "taxsplit-planning-export";' in body
+    assert 'const LEGACY_EXPORT_SCHEMA = "skatteuttag-planning-export";' in body
     assert "const EXPORT_VERSION = 1;" in body
     assert '"button.export_data"' in sv_body
     assert '"button.import_data"' in sv_body
@@ -232,7 +233,8 @@ def test_client_script_supports_portable_data_export_and_import():
     assert 'exportPdf().catch((error) => setError(error));' in body
     assert "function applyImportedState(source)" in body
     assert "function importDataFile(file)" in body
-    assert "parsed?.schema === EXPORT_SCHEMA ? parsed.form : parsed" in body
+    assert "const isPortableExport = importedSchema === EXPORT_SCHEMA || importedSchema === LEGACY_EXPORT_SCHEMA;" in body
+    assert "const importedForm = isPortableExport ? parsed.form : parsed;" in body
     assert 'importDataButton.addEventListener("click"' in body
     assert 'importDataFileInput.addEventListener("change"' in body
     assert 'exportDataButton.addEventListener("click"' in body

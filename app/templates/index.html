@@ -34,6 +34,14 @@
           </details>
           <input id="import-annual-report-file" type="file" accept="application/pdf,.pdf" class="visually-hidden">
           <input id="import-data-file" type="file" accept="application/json,.json" class="visually-hidden">
+          <label class="theme-switch pill">
+            <span data-i18n="theme.label">Tema</span>
+            <select id="theme-switch" aria-label="Theme">
+              <option value="light" data-i18n="theme.light">Ljust</option>
+              <option value="dark" data-i18n="theme.dark">Mörkt</option>
+              <option value="system" data-i18n="theme.system">System</option>
+            </select>
+          </label>
           <label class="language-switch pill">
             <span data-i18n="language.label">Language</span>
             <select id="language-switch" aria-label="Language">
@@ -510,7 +518,7 @@
       window.APP_DEFAULTS = {{ defaults | tojson }};
       window.APP_BASE_URL = {{ app_base_url | tojson }};
       window.APP_ASSET_VERSION = {{ asset_version | tojson }};
-      window.APP_NAMES = { sv: "Skatteuttag", en: "TaxSplit" };
+      window.APP_NAMES = { sv: "Skatteplaneraren", en: "TaxSplit" };
     </script>
     <script src="/static/app.js?v={{ asset_version }}" defer></script>
   </body>
