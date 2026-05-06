@@ -1,5 +1,9 @@
 # TODO
 
+> **DEPRECATED** — GitHub Issues is now the source of truth for this project.
+> See https://github.com/danielfaldt/taxsplit/issues
+> This file is kept for historical reference only. Do not add new tasks here.
+
 <!-- next-id: 20 -->
 
 <!-- screenshots: add [ss://...] at end of todo line; multiple separated by ; -->
